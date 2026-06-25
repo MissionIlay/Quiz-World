@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optics Practice Assignment - JEE Mains</title>
+    <meta name="description" content="An interactive, high-yield practice assignment featuring 50 questions on Geometrical Optics for JEE Mains with step-by-step solutions and progress tracking.">
+    
+    <!-- KaTeX for Beautiful Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #090a0f;
+            --card-bg: rgba(20, 22, 35, 0.65);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-primary: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --accent-success: #10b981;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glass-header: rgba(13, 16, 27, 0.8);
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-body);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--glass-header);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section h1 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a5b4fc, #6366f1, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-section p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .tracker-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid var(--card-border);
+        }
+
+        .tracker-badge span {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            width: 120px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-success));
+            transition: width 0.4s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .controls-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 1rem;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .filter-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab.active {
+            background: var(--accent-primary);
+            color: #fff;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            outline: none;
+            width: 100%;
+            max-width: 300px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-primary);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 15px var(--accent-glow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .q-num {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .q-tag {
+            font-size: 0.75rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .q-body {
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: auto;
+            align-items: center;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--text-muted);
+        }
+
+        .action-btn.active-btn {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .completed-checkbox {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            user-select: none;
+        }
+
+        .completed-checkbox input {
+            cursor: pointer;
+            accent-color: var(--accent-success);
+            width: 1.1rem;
+            height: 1.1rem;
+        }
+
+        .drawer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border: 1px solid transparent;
+        }
+
+        .drawer.open {
+            max-height: 500px;
+            border-color: var(--card-border);
+            margin-top: 0.5rem;
+        }
+
+        .drawer-content {
+            padding: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #d1d5db;
+        }
+
+        .drawer-content.solution-mode {
+            border-left: 3px solid var(--accent-success);
+            background: rgba(16, 185, 129, 0.02);
+        }
+
+        .drawer-content.hint-mode {
+            border-left: 3px solid var(--accent-primary);
+            background: rgba(99, 102, 241, 0.02);
+        }
+
+        /* Print formatting */
+        @media print {
+            body {
+                background: #fff;
+                color: #000;
+            }
+            header, .controls-panel, .card-actions {
+                display: none !important;
+            }
+            .card {
+                background: none;
+                border: none;
+                border-bottom: 1px solid #ccc;
+                page-break-inside: avoid;
+            }
+            .drawer {
+                max-height: none !important;
+                border: none;
+                background: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-section">
+            <h1>Optics Practice Hub</h1>
+            <p>JEE Mains Core Revision &bull; 50 Practice Questions</p>
+        </div>
+        <div class="tracker-badge">
+            <span id="tracker-text">0 / 50 Solved</span>
+            <div class="progress-bar-container">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="controls-panel">
+            <div class="filter-tabs">
+                <button class="tab active" onclick="filterCategory('all', this)">All Questions</button>
+                <button class="tab" onclick="filterCategory('plane', this)">Plane Surfaces & TIR</button>
+                <button class="tab" onclick="filterCategory('spherical', this)">Spherical Surfaces</button>
+                <button class="tab" onclick="filterCategory('lensmaker', this)">Lens Maker's & Focal Length</button>
+                <button class="tab" onclick="filterCategory('combinations', this)">Combinations & Silvering</button>
+                <button class="tab" onclick="filterCategory('mirrors', this)">Mirrors & Velocity</button>
+            </div>
+            <input type="text" class="search-input" id="search-bar" placeholder="Search questions..." oninput="handleSearch()">
+        </section>
+
+        <main class="grid" id="questions-grid">
+            <!-- Questions injected here by Javascript -->
+        </main>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                id: 1,
+                category: "plane",
+                tag: "Plane Surfaces",
+                question: "A light ray enters a glass slab (\\mu = 1.5) of thickness \\(d\\) at an angle of incidence \\(i\\). If the angle of incidence is small, show that the lateral shift of the ray is approximately \\(d \\cdot i \\left(1 - \\frac{1}{\\mu}\\right)\\).",
+                hint: "Lateral shift is given by \\(x = \\frac{d \\sin(i-r)}{\\cos r}\\). For small angles, \\(\\sin \\theta \\approx \\theta\\) and \\(\\cos \\theta \\approx 1\\). Apply Snell's law \\(i \\approx \\mu r\\).",
+                solution: "Using the formula for lateral shift:<br>\\(x = \\frac{d \\sin(i-r)}{\\cos r}\\)<br>For small angles, \\(\\cos r \\approx 1\\) and \\(\\sin(i-r) \\approx i-r\\).<br>Thus, \\(x \\approx d(i-r)\\).<br>From Snell's law, for small angles, \\(i = \\mu r \\implies r = i/\\mu\\).<br>Substituting \\(r\\):<br>\\(x \\approx d\\left(i - \\frac{i}{\\mu}\\right) = d \\cdot i \\left(1 - \\frac{1}{\\mu}\\right)\\)."
+            },
+            {
+                id: 2,
+                category: "plane",
+                tag: "Total Internal Reflection",
+                question: "A point source of light is placed at the bottom of a transparent vessel filled with water (\\(\\mu = 4/3\\)) to a height of \\(h = 12\\text{ cm}\\). Find the minimum radius of an opaque disc that should be floated on the surface of the water centered directly above the source to prevent any light from escaping out of the vessel.",
+                hint: "Light escapes within a cone defined by the critical angle \\(\\theta_c\\). The radius is related by \\(r = h \\tan\\theta_c\\), where \\(\\sin\\theta_c = 1/\\mu\\).",
+                solution: "For TIR to prevent light escape, the disc must cover the circular region where light exits at less than the critical angle.<br>\\(\\sin\\theta_c = \\frac{1}{\\mu} = \\frac{3}{4}\\)<br>\\(\\tan\\theta_c = \\frac{\\sin\\theta_c}{\\cos\\theta_c} = \\frac{3/4}{\\sqrt{1 - (3/4)^2}} = \\frac{3}{\\sqrt{7}}\\)<br>The radius of the disc is:<br>\\(r = h \\tan\\theta_c = 12 \\times \\frac{3}{\\sqrt{7}} = \\frac{36}{\\sqrt{7}}\\text{ cm} \\approx 13.6\\text{ cm}\\)."
+            },
+            {
+                id: 3,
+                category: "plane",
+                tag: "Total Internal Reflection",
+                question: "A rectangular block of glass (\\(\\mu = 1.6\\)) is surrounded by a liquid of refractive index \\(\\mu_l\\). A ray of light is incident at the top surface of the block at an angle of \\(45^\\circ\\). What must be the maximum value of \\(\\mu_l\\) so that the ray suffers total internal reflection at the vertical face of the block?",
+                hint: "Find the angle of refraction \\(r\\) at the top face. The angle of incidence at the vertical face is \\(\\theta = 90^\\circ - r\\). Apply the condition for TIR: \\(\\sin\\theta \\ge \\mu_l/\\mu\\).",
+                solution: "At the top face: \\(1 \\cdot \\sin 45^\\circ = \\mu \\sin r \\implies \\sin r = \\frac{1}{\\sqrt{2}\\mu}\\).<br>At the vertical face, the angle of incidence is \\(\\theta = 90^\\circ - r\\).<br>For TIR: \\(\\sin \\theta \\ge \\frac{\\mu_l}{\\mu} \\implies \\cos r \\ge \\frac{\\mu_l}{\\mu}\\).<br>Using \\(\\cos r = \\sqrt{1 - \\sin^2 r} = \\sqrt{1 - \\frac{1}{2\\mu^2}}\\):<br>\\(\\sqrt{1 - \\frac{1}{2\\mu^2}} \\ge \\frac{\\mu_l}{\\mu} \\implies \\mu_l \\le \\sqrt{\\mu^2 - 0.5}\\).<br>Substitute \\(\\mu = 1.6\\):<br>\\(\\mu_l \\le \\sqrt{2.56 - 0.5} = \\sqrt{2.06} \\approx 1.435\\).<br>Thus, the maximum value of \\(\\mu_l\\) is approximately \\(1.435\\)."
+            },
+            {
+                id: 4,
+                category: "plane",
+                tag: "Plane Surfaces",
+                question: "An observer looks down vertically at a coin sitting at the bottom of a swimming pool of depth \\(H\\). The pool is filled with two immiscible liquids: the lower half with a liquid of refractive index \\(\\mu_1 = 1.5\\) and the upper half with a liquid of refractive index \\(\\mu_2 = 1.2\\). Find the apparent depth of the coin.",
+                hint: "Apparent depth for multiple layers is given by the sum of individual apparent depths: \\(d' = \\sum \\frac{d_i}{\\mu_i}\\).",
+                solution: "The thickness of each liquid layer is \\(d_1 = d_2 = H/2\\).<br>Apparent depth \\(d' = \\frac{d_1}{\\mu_1} + \\frac{d_2}{\\mu_2}\\)<br>\\(d' = \\frac{H/2}{1.5} + \\frac{H/2}{1.2} = \\frac{H}{3} + \\frac{H}{2.4} = \\frac{H}{3} + \\frac{5H}{12} = \\frac{9H}{12} = 0.75H\\)."
+            },
+            {
+                id: 5,
+                category: "plane",
+                tag: "Prism Refraction",
+                question: "A ray of light is incident normally on one face of an equilateral glass prism of refractive index \\(\\sqrt{2}\\). Trace the ray and find if it undergoes TIR.",
+                hint: "Equilateral prism angle is \\(A = 60^\\circ\\). At normal incidence on the first face, the ray goes undeviated. Calculate the angle of incidence at the second face.",
+                solution: "At the first face: normal incidence \\(i_1 = 0 \\implies r_1 = 0\\).<br>The angle of incidence at the second face is \\(r_2 = A - r_1 = 60^\\circ - 0 = 60^\\circ\\).<br>Critical angle for glass-air boundary: \\(\\sin\\theta_c = \\frac{1}{\\mu} = \\frac{1}{\\sqrt{2}} \\implies \\theta_c = 45^\\circ\\).<br>Since the angle of incidence \\(r_2 = 60^\\circ > 45^\\circ\\), the ray undergoes **Total Internal Reflection** at the second face."
+            },
+            {
+                id: 6,
+                category: "plane",
+                tag: "Total Internal Reflection",
+                question: "An optical fiber is made of a core material of refractive index \\(\\mu_1 = 1.5\\) surrounded by a cladding of refractive index \\(\\mu_2 = 1.4\\). What is the maximum angle of incidence \\(i\\) (with the axis of the fiber) at the entrance end so that light propagates along the fiber via total internal reflection?",
+                hint: "For TIR at core-cladding boundary, the internal angle of incidence \\(\\theta \\ge \\theta_c = \\sin^{-1}(\\mu_2/\\mu_1)\\). Relate this to the refraction at the entrance face.",
+                solution: "Let \\(i\\) be the angle of incidence at the entrance, and \\(r\\) be the angle of refraction.<br>The angle of incidence at the core-cladding boundary is \\(\\theta = 90^\\circ - r\\).<br>For TIR: \\(\\sin\\theta \\ge \\frac{\\mu_2}{\\mu_1} \\implies \\cos r \\ge \\frac{1.4}{1.5} = \\frac{14}{15}\\).<br>\\(\\sin^2 r = 1 - \\cos^2 r \\le 1 - \\left(\\frac{14}{15}\\right)^2 = \\frac{29}{225}\\).<br>From Snell's law at entrance: \\(\\sin i = \\mu_1 \\sin r = 1.5 \\sin r\\).<br>Thus, \\(\\sin^2 i = 2.25 \\sin^2 r \\le 2.25 \\times \\frac{29}{225} = 0.29 \\implies \\sin i \\le \\sqrt{0.29} \\approx 0.5385\\).<br>Therefore, \\(i_{\\text{max}} = \\sin^{-1}(0.5385) \\approx 32.6^\\circ\\)."
+            },
+            {
+                id: 7,
+                category: "plane",
+                tag: "Plane Surfaces",
+                question: "A microscopic particle is embedded at the center of a solid glass sphere of radius \\(R = 6\\text{ cm}\\) and refractive index \\(\\mu = 1.5\\). From what distance from the surface of the sphere will the particle appear to be situated when viewed from outside?",
+                hint: "For any ray originating from the center, the angle of incidence at the spherical surface is zero because it is normal to the surface.",
+                solution: "Since the object is at the center of the sphere, all rays from it fall normally on the spherical surface.<br>No refraction/deviation occurs for these rays.<br>Therefore, to an observer outside, the particle appears to be at its actual position, i.e., at the center of the sphere, which is at a distance of \\(6\\text{ cm}\\) from the surface."
+            },
+            {
+                id: 8,
+                category: "spherical",
+                tag: "Spherical Refraction",
+                question: "A point object is placed in air (\\(\\mu = 1.0\\)) at a distance of \\(40\\text{ cm}\\) from the convex spherical surface of a glass rod (\\(\\mu = 1.5\\)). If the radius of curvature of the spherical surface is \\(20\\text{ cm}\\), find the position of the image.",
+                hint: "Use the single spherical refracting surface formula: \\(\\frac{\\mu_2}{v} - \\frac{\\mu_1}{u} = \\frac{\\mu_2 - \\mu_1}{R}\\). Watch your signs.",
+                solution: "Using the formula: \\(\\frac{\\mu_2}{v} - \\frac{\\mu_1}{u} = \\frac{\\mu_2 - \\mu_1}{R}\\)<br>Given: \\(\\mu_1 = 1.0, \\mu_2 = 1.5, u = -40\\text{ cm}, R = +20\\text{ cm}\\).<br>\\(\\frac{1.5}{v} - \\frac{1}{-40} = \\frac{1.5 - 1.0}{20}\\)<br>\\(\\frac{1.5}{v} + \\frac{1}{40} = \\frac{0.5}{20} = \\frac{1}{40}\\)<br>\\(\\frac{1.5}{v} = 0 \\implies v \\to \\infty\\).<br>The image is formed at infinity (the refracted rays become parallel)."
+            },
+            {
+                id: 9,
+                category: "spherical",
+                tag: "Spherical Refraction",
+                question: "A glass sphere of radius \\(R = 10\\text{ cm}\\) and refractive index \\(\\mu = 1.5\\) contains a small air bubble. When viewed along a diameter, the bubble appears to be at a distance of \\(4\\text{ cm}\\) from the nearest surface. Find the actual distance of the bubble from this surface.",
+                hint: "Rays travel from glass to air, so \\(\\mu_1 = 1.5, \\mu_2 = 1.0\\). The virtual image is at \\(v = -4\\text{ cm}\\). Center of curvature is on the object's side, so \\(R\\) is negative.",
+                solution: "Using \\(\\frac{\\mu_2}{v} - \\frac{\\mu_1}{u} = \\frac{\\mu_2 - \\mu_1}{R}\\):<br>Here, \\(\\mu_1 = 1.5\\) (glass), \\(\\mu_2 = 1.0\\) (air).<br>\\(v = -4\\text{ cm}\\) (image is virtual, formed on same side), \\(R = -10\\text{ cm}\\) (center is to the left of vertex).<br>\\(\\frac{1.0}{-4} - \\frac{1.5}{u} = \\frac{1.0 - 1.5}{-10}\\)<br>\\(-0.25 - \\frac{1.5}{u} = \\frac{-0.5}{-10} = +0.05\\)<br>\\(-\\frac{1.5}{u} = 0.05 + 0.25 = 0.30\\)<br>\\(u = -\\frac{1.5}{0.30} = -5\\text{ cm}\\).<br>The actual distance of the bubble from the surface is \\(5\\text{ cm}\\)."
+            },
+            {
+                id: 10,
+                category: "spherical",
+                tag: "Spherical Refraction",
+                question: "A parallel beam of light traveling in air is incident on a solid glass sphere of radius \\(R\\) and refractive index \\(\\mu = 1.5\\). Find the position where the beam is focused after refracting through both surfaces of the sphere.",
+                hint: "Solve in two steps. First surface: \\(u = -\\infty, R_1 = +R\\). The first image acts as a virtual object for the second surface.",
+                solution: "First Surface Refraction:<br>\\(\\mu_1=1, \\mu_2=1.5, u_1=-\\infty, R_1=+R\\).<br>\\(\\frac{1.5}{v_1} - 0 = \\frac{1.5-1}{R} \\implies v_1 = 3R\\) from first vertex.<br>Second Surface Refraction:<br>The image acts as a virtual object. Its distance from the second vertex is \\(u_2 = v_1 - 2R = 3R - 2R = +R\\).<br>Here, \\(\\mu_1 = 1.5, \\mu_2 = 1.0, R_2 = -R\\).<br>\\(\\frac{1.0}{v_2} - \\frac{1.5}{R} = \\frac{1.0 - 1.5}{-R} = \\frac{0.5}{R}\\)<br>\\(\\frac{1.0}{v_2} = \\frac{1.5}{R} + \\frac{0.5}{R} = \\frac{2}{R} \\implies v_2 = R/2\\).<br>The beam is focused at a distance of \\(R/2\\) from the second surface."
+            },
+            {
+                id: 11,
+                category: "spherical",
+                tag: "Spherical Refraction",
+                question: "An object is placed at a distance of \\(12\\text{ cm}\\) from a convex refracting surface of radius of curvature \\(10\\text{ cm}\\) separating air from a medium of refractive index \\(2.0\\). Find the position and nature of the image formed.",
+                hint: "Apply the single-surface formula with \\(\\mu_1=1, \\mu_2=2, u=-12\\text{ cm}, R=+10\\text{ cm}\\).",
+                solution: "Using the formula: \\(\\frac{\\mu_2}{v} - \\frac{\\mu_1}{u} = \\frac{\\mu_2 - \\mu_1}{R}\\)<br>\\(\\frac{2}{v} - \\frac{1}{-12} = \\frac{2 - 1}{10} = \\frac{1}{10}\\)<br>\\(\\frac{2}{v} + \\frac{1}{12} = \\frac{1}{10} \\implies \\frac{2}{v} = \\frac{1}{10} - \\frac{1}{12} = \\frac{2}{120} = \\frac{1}{60}\\)<br>\\(v = 120\\text{ cm}\\).<br>Since \\(v > 0\\), the image is real, formed inside the second medium at a distance of \\(120\\text{ cm}\\) from the pole."
+            },
+            {
+                id: 12,
+                category: "spherical",
+                tag: "Spherical Refraction",
+                question: "A hollow thin glass sphere of radius \\(R\\) is filled with water (\\(\\mu = 4/3\\)). A parallel beam of light is incident on it. Where will it focus if the refractive index of the thin glass shell is neglected?",
+                hint: "Use two refractions: first surface from air to water, second surface from water to air.",
+                solution: "First surface refraction (air to water):<br>\\(\\mu_1=1, \\mu_2=4/3, u_1=-\\infty, R_1=+R\\).<br>\\(\\frac{4/3}{v_1} - 0 = \\frac{4/3-1}{R} \\implies \\frac{4}{3v_1} = \\frac{1}{3R} \\implies v_1 = 4R\\).<br>Second surface refraction (water to air):<br>Object distance from second surface: \\(u_2 = 4R - 2R = +2R\\).<br>\\(\\mu_1=4/3, \\mu_2=1, R_2=-R\\).<br>\\(\\frac{1}{v_2} - \\frac{4/3}{2R} = \\frac{1 - 4/3}{-R} = \\frac{1}{3R}\\)<br>\\(\\frac{1}{v_2} - \\frac{2}{3R} = \\frac{1}{3R} \\implies \\frac{1}{v_2} = \\frac{3}{3R} = \\frac{1}{R} \\implies v_2 = +R\\).<br>The beam is focused at a distance of \\(R\\) from the second surface."
+            },
+            {
+                id: 13,
+                category: "spherical",
+                tag: "Spherical Refraction",
+                question: "A cylindrical glass rod (\\(\\mu = 1.5\\)) of length \\(L = 20\\text{ cm}\\) has a hemispherical convex end of radius \\(R = 5\\text{ cm}\\). A point object is placed on the axis in air at a distance of \\(15\\text{ cm}\\) from the vertex of the hemisphere. Find the position of the final image.",
+                hint: "Refract at the curved surface first. Check if the image falls within the rod's length. If it does not, treat the flat back surface as a second refracting boundary.",
+                solution: "First refraction (curved surface):<br>\\(\\mu_1=1, \\mu_2=1.5, u=-15\\text{ cm}, R=+5\\text{ cm}\\).<br>\\(\\frac{1.5}{v_1} - \\frac{1}{-15} = \\frac{1.5-1}{5} = \\frac{1}{10}\\)<br>\\(\\frac{1.5}{v_1} + \\frac{1}{15} = \\frac{1}{10} \\implies \\frac{1.5}{v_1} = \\frac{1}{30} \\implies v_1 = 45\\text{ cm}\\).<br>Since the rod length is \\(20\\text{ cm}\\), the rays hit the back flat surface before meeting.<br>At the flat surface: \\(u_2 = 45 - 20 = 25\\text{ cm}\\) (virtual object).<br>Refraction at flat boundary (glass to air):<br>\\(v_2 = \\frac{\\mu_2}{\\mu_1} u_2 = \\frac{1.0}{1.5} \\times 25 = 16.67\\text{ cm}\\) from the flat face."
+            },
+            {
+                id: 14,
+                category: "lensmaker",
+                tag: "Lens Maker's",
+                question: "An equi-convex lens has a focal length of \\(20\\text{ cm}\\) in air. The refractive index of the glass is \\(1.5\\). If this lens is completely immersed in water (\\(\\mu = 4/3\\)), find its new focal length.",
+                hint: "Use the ratio formula: \\(\\frac{f_w}{f_a} = \\frac{\\mu_g - 1}{\\frac{\\mu_g}{\\mu_w} - 1}\\).",
+                solution: "Given: \\(f_a = 20\\text{ cm}, \\mu_g = 1.5, \\mu_w = 4/3\\).<br>\\(\\frac{f_w}{f_a} = \\frac{1.5 - 1}{\\frac{1.5}{4/3} - 1} = \\frac{0.5}{\\frac{9}{8} - 1} = \\frac{0.5}{0.125} = 4\\).<br>\\(f_w = 4 \\times f_a = 4 \\times 20 = 80\\text{ cm}\\)."
+            },
+            {
+                id: 15,
+                category: "lensmaker",
+                tag: "Lens Maker's",
+                question: "A thin convex lens of glass (\\(\\mu_g = 1.5\\)) has a focal length of \\(10\\text{ cm}\\) in air. When it is immersed in a liquid of refractive index \\(\\mu_l\\), it behaves as a diverging lens of focal length \\(30\\text{ cm}\\). Find the refractive index of the liquid \\(\\mu_l\\).",
+                hint: "Remember to substitute \\(f_l = -30\\text{ cm}\\) since it acts as a diverging lens.",
+                solution: "In air: \\(\\frac{1}{f_a} = (\\mu_g - 1)K \\implies \\frac{1}{10} = (1.5 - 1)K \\implies K = 0.2\\).<br>In liquid: \\(\\frac{1}{f_l} = \\left(\\frac{\\mu_g}{\\mu_l} - 1\\right)K\\)<br>\\(\\frac{1}{-30} = \\left(\\frac{1.5}{\\mu_l} - 1\\right)(0.2) \\implies -\\frac{1}{6} = \\frac{1.5}{\\mu_l} - 1\\)<br>\\(\\frac{1.5}{\\mu_l} = 1 - \\frac{1}{6} = \\frac{5}{6} \\implies \\mu_l = 1.5 \\times \\frac{6}{5} = 1.8\\)."
+            },
+            {
+                id: 16,
+                category: "lensmaker",
+                tag: "Lens Maker's",
+                question: "Find the focal length of a plano-convex lens made of material of refractive index \\(1.6\\) if the radius of curvature of the curved surface is \\(12\\text{ cm}\\).",
+                hint: "For a plano-convex lens, one surface is curved (\\(R_1 = 12\\text{ cm}\\)) and the other is flat (\\(R_2 = \\infty\\)).",
+                solution: "Using Lens Maker's Formula:<br>\\(\\frac{1}{f} = (\\mu - 1)\\left(\\frac{1}{R_1} - \\frac{1}{R_2}\right)\\)<br>\\(\\frac{1}{f} = (1.6 - 1)\\left(\\frac{1}{12} - \\frac{1}{\\infty}\\right) = 0.6 \\times \\frac{1}{12} = \\frac{1}{20}\\)<br>\\(f = 20\\text{ cm}\\)."
+            },
+            {
+                id: 17,
+                category: "lensmaker",
+                tag: "Cutting Lenses",
+                question: "A thin equi-convex lens of focal length \\(f\\) is cut into two equal halves along a plane perpendicular to its principal axis (vertically). What is the focal length of each half?",
+                hint: "For each half, one of the curved surfaces becomes flat, so its radius of curvature becomes \\(\\infty\\). Check Lens Maker's Formula.",
+                solution: "For the original lens: \\(\\frac{1}{f} = (\\mu - 1)\\left(\\frac{2}{R}\\right)\\).<br>For each vertical half, the surfaces have radii \\(R_1 = R\\) and \\(R_2 = \\infty\\).<br>\\(\\frac{1}{f'} = (\\mu - 1)\\left(\\frac{1}{R} - \\frac{1}{\\infty}\\right) = (\\mu - 1)\\frac{1}{R}\\).<br>Comparing the two: \\(\\frac{1}{f'} = \\frac{1}{2f} \\implies f' = 2f\\).<br>Thus, the focal length of each half is doubled."
+            },
+            {
+                id: 18,
+                category: "lensmaker",
+                tag: "Cutting Lenses",
+                question: "If a thin equi-convex lens of focal length \\(f\\) is cut into two equal halves along its principal axis (horizontally), what is the focal length of each half?",
+                hint: "Curvatures of the surfaces are not altered when cut horizontally.",
+                solution: "Cutting a lens horizontally does not change the radii of curvature \\(R_1, R_2\\) or the refractive index \\(\\mu\\).<br>Therefore, the focal length of each half remains unchanged, i.e., \\(f' = f\\). (The intensity of the image formed, however, will be reduced because the aperture area is halved)."
+            },
+            {
+                id: 19,
+                category: "lensmaker",
+                tag: "Lens Combinations",
+                question: "A plano-convex lens (\\(\\mu_1 = 1.5\\)) fits exactly into a plano-concave lens (\\(\\mu_2 = 1.6\\)). The radius of curvature of their shared curved interface is \\(20\\text{ cm}\\). Find the focal length of the combined lens system.",
+                hint: "Use \\(\\frac{1}{f_{\\text{eq}}} = \\frac{1}{f_1} + \\frac{1}{f_2}\\). Use proper signs for the curved interface in both cases.",
+                solution: "For the plano-convex lens: \\(R_1 = \\infty, R_2 = -20\\text{ cm}\\).<br>\\(\\frac{1}{f_1} = (1.5 - 1)\\left(\\frac{1}{\\infty} - \\frac{1}{-20}\\right) = 0.5 \\times \\frac{1}{20} = \\frac{1}{40}\\).<br>For the plano-concave lens: \\(R_1 = -20\\text{ cm}, R_2 = \\infty\\).<br>\\(\\frac{1}{f_2} = (1.6 - 1)\\left(\\frac{1}{-20} - \\frac{1}{\\infty}\\right) = 0.6 \\times \\left(-\\frac{1}{20}\\right) = -\\frac{3}{100}\\).<br>Equivalent focal length:<br>\\(\\frac{1}{f_{\\text{eq}}} = \\frac{1}{f_1} + \\frac{1}{f_2} = \\frac{1}{40} - \\frac{3}{100} = \\frac{5 - 6}{200} = -\\frac{1}{200} \\implies f_{\\text{eq}} = -200\\text{ cm}\\)."
+            },
+            {
+                id: 20,
+                category: "lensmaker",
+                tag: "Lens Maker's",
+                question: "A convex lens made of glass (\\(\\mu_g = 1.5\\)) has a focal length \\(f\\) in air. If it is immersed in a medium of refractive index \\(\\mu_m = 1.5\\), what will be its behavior and focal length?",
+                hint: "The refractive index of the lens matches the medium.",
+                solution: "Using Lens Maker's Formula:<br>\\(\\frac{1}{f'} = \\left(\\frac{\\mu_g}{\\mu_m} - 1\\right)\\left(\\frac{1}{R_1} - \\frac{1}{R_2}\right)\\)<br>Since \\(\\mu_g = \\mu_m = 1.5\\), we get \\(\\frac{\\mu_g}{\\mu_m} - 1 = 0\\).<br>Thus, \\(\\frac{1}{f'} = 0 \\implies f' = \\infty\\).<br>The lens behaves as a simple flat glass sheet and loses its converging capability."
+            },
+            {
+                id: 21,
+                category: "lensmaker",
+                tag: "Lens Maker's",
+                question: "The radii of curvature of the two surfaces of a double convex lens are \\(10\\text{ cm}\\) and \\(15\\text{ cm}\\). If the focal length of the lens is \\(12\\text{ cm}\\), find the refractive index of the material of the lens.",
+                hint: "Use \\(R_1 = +10\\text{ cm}\\), \\(R_2 = -15\\text{ cm}\\) in the Lens Maker's formula.",
+                solution: "Lens Maker's Formula:<br>\\(\\frac{1}{f} = (\\mu - 1)\\left(\\frac{1}{R_1} - \\frac{1}{R_2}\right)\\)<br>\\(\\frac{1}{12} = (\\mu - 1)\\left(\\frac{1}{10} - \\frac{1}{-15}\\right) = (\\mu - 1)\\left(\\frac{1}{10} + \\frac{1}{15}\\right) = (\\mu - 1)\\frac{5}{30} = (\\mu - 1)\\frac{1}{6}\\)<br>\\(\\mu - 1 = \\frac{6}{12} = 0.5 \\implies \\mu = 1.5\\)."
+            },
+            {
+                id: 22,
+                category: "lensmaker",
+                tag: "Lens Formula",
+                question: "An object is placed at a distance of \\(30\\text{ cm}\\) in front of a thin convex lens of focal length \\(20\\text{ cm}\\). Find the position and magnification of the image.",
+                hint: "Use \\(\\frac{1}{v} - \\frac{1}{u} = \\frac{1}{f}\\) with \\(u = -30\\text{ cm}, f = +20\\text{ cm}\\). Magnification is \\(m = v/u\\).",
+                solution: "Lens formula: \\(\\frac{1}{v} - \\frac{1}{u} = \\frac{1}{f}\\)<br>\\(\\frac{1}{v} - \\frac{1}{-30} = \\frac{1}{20} \\implies \\frac{1}{v} = \\frac{1}{20} - \\frac{1}{30} = \\frac{1}{60} \\implies v = +60\\text{ cm}\\).<br>Magnification: \\(m = \\frac{v}{u} = \\frac{60}{-30} = -2\\).<br>The image is real, inverted, magnified 2 times, and formed at a distance of \\(60\\text{ cm}\\) behind the lens."
+            },
+            {
+                id: 23,
+                category: "lensmaker",
+                tag: "Lens Formula",
+                question: "A converging lens of focal length \\(f = 15\\text{ cm}\\) forms a virtual image which is \\(3\\text{ times}\\) the size of the object. Find the distance of the object from the lens.",
+                hint: "For a virtual image in a convex lens, magnification \\(m = +3\\). So \\(v = 3u\\).",
+                solution: "Since the image is virtual, \\(m = +3 = \\frac{v}{u} \\implies v = 3u\\).<br>Using Lens formula:<br>\\(\\frac{1}{v} - \\frac{1}{u} = \\frac{1}{f} \\implies \\frac{1}{3u} - \\frac{1}{u} = \\frac{1}{15}\\)<br>\\(\\frac{1 - 3}{3u} = \\frac{1}{15} \\implies -\\frac{2}{3u} = \\frac{1}{15} \\implies 3u = -30 \\implies u = -10\\text{ cm}\\).<br>The object distance is \\(10\\text{ cm}\\) in front of the lens."
+            },
+            {
+                id: 24,
+                category: "lensmaker",
+                tag: "Lens Maker's",
+                question: "A thin lens has a power of \\(+4\\text{ D}\\) in air. When immersed in a liquid of refractive index \\(1.6\\), its power becomes \\(-1\\text{ D}\\). Find the refractive index of the glass of the lens.",
+                hint: "Power of a lens is given by \\(P = \\frac{\\mu_m}{f}\\). Write two equations and divide.",
+                solution: "Power in air: \\(P_a = (\\mu_g - 1)K = 4\\text{ D}\\).<br>Power in liquid: \\(P_l = \\mu_l \\left(\\frac{\\mu_g}{\\mu_l} - 1\\right)K = (\\mu_g - \\mu_l)K = -1\\text{ D}\\).<br>Divide the two equations:<br>\\(\\frac{4}{-1} = \\frac{\\mu_g - 1}{\\mu_g - 1.6} \\implies -4(\\mu_g - 1.6) = \\mu_g - 1\\)<br>\\(-4\\mu_g + 6.4 = \\mu_g - 1 \\implies 5\\mu_g = 7.4 \\implies \\mu_g = 1.48\\)."
+            },
+            {
+                id: 25,
+                category: "lensmaker",
+                tag: "Displacement Method",
+                question: "An object is placed at a distance of \\(1.5\\text{ m}\\) from a screen. A convex lens of focal length \\(24\\text{ cm}\\) is placed between them. Find the two positions of the lens at which a sharp image of the object can be formed on the screen.",
+                hint: "Use the displacement method relationship: \\(D = 150\\text{ cm}\\) and \\(f = 24\\text{ cm}\\). The distance between positions is \\(d = \\sqrt{D^2 - 4fD}\\).",
+                solution: "Let \\(D = 1.5\\text{ m} = 150\\text{ cm}\\).<br>The lens forms a real image on the screen, so \\(D > 4f\\) (since \\(150 > 96\\)).<br>The distance between the two conjugate positions is:<br>\\(d = \\sqrt{D^2 - 4fD} = \\sqrt{150^2 - 4(24)(150)} = \\sqrt{22500 - 14400} = \\sqrt{8100} = 90\\text{ cm}\\).<br>The positions of the lens from the object are:<br>\\(x_1 = \\frac{D - d}{2} = \\frac{150 - 90}{2} = 30\\text{ cm}\\)<br>\\(x_2 = \\frac{D + d}{2} = \\frac{150 + 90}{2} = 120\\text{ cm}\\)."
+            },
+            {
+                id: 26,
+                category: "combinations",
+                tag: "Lens Combinations",
+                question: "A convex lens of focal length \\(15\\text{ cm}\\) is placed coaxially in contact with a concave lens of focal length \\(30\\text{ cm}\\). What is the focal length and power of the combination?",
+                hint: "Use \\(\\frac{1}{f_{\\text{eq}}} = \\frac{1}{f_1} + \\frac{1}{f_2}\\) with \\(f_1 = +15\\) and \\(f_2 = -30\\).",
+                solution: "Focal length formula:<br>\\(\\frac{1}{f_{\\text{eq}}} = \\frac{1}{15} + \\frac{1}{-30} = \\frac{2 - 1}{30} = \\frac{1}{30} \\implies f_{\\text{eq}} = +30\\text{ cm}\\).<br>Power of combination: \\(P = \\frac{100}{f_{\\text{eq}}\\text{ (in cm)}} = \\frac{100}{30} = +3.33\\text{ D}\\)."
+            },
+            {
+                id: 27,
+                category: "combinations",
+                tag: "Lens Combinations",
+                question: "Two thin converging lenses of focal lengths \\(20\\text{ cm}\\) and \\(30\\text{ cm}\\) are placed coaxially separated by a distance of \\(10\\text{ cm}\\). A parallel beam of light is incident on the first lens. At what distance from the second lens will the beam converge?",
+                hint: "First lens forms its image at its focal point. This acts as a virtual object for the second lens.",
+                solution: "For the first lens, parallel rays focus at \\(v_1 = f_1 = 20\\text{ cm}\\).<br>Since the lenses are separated by \\(d = 10\\text{ cm}\\), this first image is formed \\(20 - 10 = 10\\text{ cm}\\) behind the second lens.<br>Thus, for the second lens: \\(u_2 = +10\\text{ cm}\\) (virtual object).<br>Using lens formula for the second lens (\\(f_2 = 30\\text{ cm}\\)):<br>\\(\\frac{1}{v_2} - \\frac{1}{u_2} = \\frac{1}{f_2} \\implies \\frac{1}{v_2} - \\frac{1}{10} = \\frac{1}{30}\\)<br>\\(\\frac{1}{v_2} = \\frac{1}{30} + \\frac{1}{10} = \\frac{4}{30} \\implies v_2 = 7.5\\text{ cm}\\).<br>The beam converges at a distance of \\(7.5\\text{ cm}\\) behind the second lens."
+            },
+            {
+                id: 28,
+                category: "combinations",
+                tag: "Silvered Lenses",
+                question: "The plane surface of a plano-convex lens (\\(\\mu = 1.5, R = 20\\text{ cm}\\)) is silvered. Find the effective focal length of this system and determine its nature.",
+                hint: "A silvered lens acts as a mirror. Use \\(P_{\\text{eq}} = 2P_L + P_M\\). The flat silvered face has \\(P_M = 0\\).",
+                solution: "Power of lens: \\(P_L = \\frac{1}{f_L} = (\\mu - 1)\\frac{1}{R} = (1.5 - 1)\\frac{1}{20} = \\frac{1}{40}\\text{ cm}^{-1}\\).<br>The silvered surface is flat, so its radius of curvature is \\(\\infty\\), meaning \\(P_M = 0\\).<br>Effective power: \\(P_{\\text{eq}} = 2P_L + P_M = 2\\left(\\frac{1}{40}\\right) + 0 = \\frac{1}{20}\\text{ cm}^{-1}\\).<br>Effective focal length: \\(F = -\\frac{1}{P_{\\text{eq}}} = -20\\text{ cm}\\).<br>The negative sign indicates it behaves as a **converging (concave) mirror**."
+            },
+            {
+                id: 29,
+                category: "combinations",
+                tag: "Silvered Lenses",
+                question: "The curved surface of a plano-convex lens (\\(\\mu = 1.5, R = 15\\text{ cm}\\)) is silvered. Find the effective focal length of this system.",
+                hint: "The light reflects from a curved surface. The formula is \\(F = -\\frac{R}{2\\mu}\\) for a plano-convex lens silvered at its curved face.",
+                solution: "Power of lens: \\(P_L = (\\mu - 1)\\frac{1}{R} = (1.5 - 1)\\frac{1}{15} = \\frac{1}{30}\\text{ cm}^{-1}\\).<br>The silvered surface is curved. From inside the glass, it acts as a concave mirror of radius \\(R = 15\\text{ cm}\\).<br>Focal length of the mirror: \\(f_m = -R/2 = -7.5\\text{ cm} \\implies P_M = -\\frac{1}{f_m} = \\frac{1}{7.5} = \\frac{2}{15}\\text{ cm}^{-1}\\).<br>Effective power: \\(P_{\\text{eq}} = 2P_L + P_M = 2\\left(\\frac{1}{30}\\right) + \\frac{2}{15} = \\frac{1}{15} + \\frac{2}{15} = \\frac{3}{15} = \\frac{1}{5}\\text{ cm}^{-1}\\).<br>Effective focal length: \\(F = -\\frac{1}{P_{\\text{eq}}} = -5\\text{ cm}\\) (converging behavior)."
+            },
+            {
+                id: 30,
+                category: "combinations",
+                tag: "Silvered Lenses",
+                question: "A double convex lens (\\(\\mu = 1.5\\)) has both surfaces with radius of curvature \\(R = 30\\text{ cm}\\). If one of the curved surfaces is silvered, it behaves as a concave mirror. What is its effective focal length?",
+                hint: "Use \\(P_{\\text{eq}} = 2P_L + P_M\\). Calculate \\(P_L\\) first, then the power of the concave reflecting boundary.",
+                solution: "Power of double convex lens in air:<br>\\(\\frac{1}{f_L} = (1.5 - 1)\\left(\\frac{1}{30} - \\frac{1}{-30}\\right) = 0.5 \\times \\frac{2}{30} = \\frac{1}{30}\\text{ cm}^{-1}\\).<br>The silvered surface has radius \\(R = 30\\text{ cm}\\), so its mirror power is \\(P_M = \\frac{1}{15}\\text{ cm}^{-1}\\).<br>Effective power: \\(P_{\\text{eq}} = 2P_L + P_M = 2\\left(\\frac{1}{30}\\right) + \\frac{1}{15} = \\frac{2}{15}\\text{ cm}^{-1}\\).<br>Effective focal length: \\(F = -\\frac{1}{P_{\\text{eq}}} = -7.5\\text{ cm}\\)."
+            },
+            {
+                id: 31,
+                category: "combinations",
+                tag: "Combinations",
+                question: "An object is placed at a distance of \\(12\\text{ cm}\\) in front of a system consisting of a convex lens (\\(f = 10\\text{ cm}\\)) and a concave mirror (\\(f_m = 15\\text{ cm}\\)) placed coaxially \\(40\\text{ cm}\\) behind the lens. Find the position of the final image.",
+                hint: "Find the image distance \\(v_1\\) from the lens first. It will form behind the mirror. Treat it as a virtual object for the mirror.",
+                solution: "For the lens: \\(u_1 = -12\\text{ cm}, f_1 = 10\\text{ cm}\\).<br>\\(\\frac{1}{v_1} - \\frac{1}{-12} = \\frac{1}{10} \\implies \\frac{1}{v_1} = \\frac{1}{10} - \\frac{1}{12} = \\frac{1}{60} \\implies v_1 = +60\\text{ cm}\\).<br>Since the mirror is placed \\(40\\text{ cm}\\) behind the lens, the image is formed \\(60 - 40 = 20\\text{ cm}\\) behind the mirror.<br>This acts as a virtual object for the mirror: \\(u_2 = +20\\text{ cm}\\).<br>Using mirror formula: \\(\\frac{1}{v_2} + \\frac{1}{u_2} = \\frac{1}{f_m} \\implies \\frac{1}{v_2} + \\frac{1}{20} = -\\frac{1}{15}\\)<br>\\(\\frac{1}{v_2} = -\\frac{1}{15} - \\frac{1}{20} = -\\frac{7}{60} \\implies v_2 = -8.57\\text{ cm}\\) in front of the mirror (which is \\(31.43\\text{ cm}\\) to the right of the lens)."
+            },
+            {
+                id: 32,
+                category: "mirrors",
+                tag: "Mirror Velocity",
+                question: "An object is placed at a distance of \\(20\\text{ cm}\\) from a concave mirror of focal length \\(15\\text{ cm}\\). If the object starts moving with a velocity of \\(2\\text{ cm/s}\\) along the principal axis away from the mirror, find the velocity of the image at that instant.",
+                hint: "Differentiate the mirror formula to relate velocities: \\(v_I = -\\left(\\frac{v}{u}\\right)^2 v_O\\).",
+                solution: "First find \\(v\\): \\(\\frac{1}{v} + \\frac{1}{-20} = \\frac{1}{-15} \\implies v = -60\\text{ cm}\\).<br>Differentiating \\(\\frac{1}{v} + \\frac{1}{u} = \\frac{1}{f}\\) with respect to time:<br>\\(-\\frac{1}{v^2}\\frac{dv}{dt} - \\frac{1}{u^2}\\frac{du}{dt} = 0 \\implies \\frac{dv}{dt} = -\\left(\\frac{v}{u}\\right)^2 \\frac{du}{dt}\\).<br>Given \\(\\frac{du}{dt} = 2\\text{ cm/s}\\) (away from mirror, i.e., positive if direction is defined):<br>\\(v_I = -\\left(\\frac{-60}{-20}\\right)^2 (2) = -9 \\times 2 = -18\\text{ cm/s}\\).<br>The image moves at \\(18\\text{ cm/s}\\) towards the mirror."
+            },
+            {
+                id: 33,
+                category: "mirrors",
+                tag: "Mirror Velocity",
+                question: "A point object moves with a constant speed of \\(10\\text{ m/s}\\) along the principal axis towards a convex mirror of focal length \\(30\\text{ cm}\\). When the object is at a distance of \\(60\\text{ cm}\\) from the mirror, what is the speed of its image?",
+                hint: "Calculate \\(v\\) using convex mirror formula. Use the longitudinal velocity relationship.",
+                solution: "For convex mirror: \\(u = -60\\text{ cm}, f = +30\\text{ cm}\\).<br>\\(\\frac{1}{v} + \\frac{1}{-60} = \\frac{1}{30} \\implies \\frac{1}{v} = \\frac{1}{30} + \\frac{1}{60} = \\frac{3}{60} = \\frac{1}{20} \\implies v = +20\\text{ cm}\\).<br>Velocity of image:<br>\\(v_I = -\\left(\\frac{v}{u}\\right)^2 v_O = -\\left(\\frac{20}{-60}\\right)^2 (10) = -\\frac{1}{9} \\times 10 = -1.11\\text{ m/s}\\).<br>The speed of the image is \\(1.11\\text{ m/s}\\)."
+            },
+            {
+                id: 34,
+                category: "mirrors",
+                tag: "Mirrors",
+                question: "A convex mirror of focal length \\(f\\) forms an image which is \\(1/n\\) times the size of the object. Find the distance of the object from the mirror.",
+                hint: "Magnification for a mirror is \\(m = -\\frac{v}{u} = \\frac{f}{f-u}\\). For a convex mirror, it is always positive.",
+                solution: "For a convex mirror, the image is virtual and erect, so magnification is positive:<br>\\(m = +\\frac{1}{n} = \\frac{f}{f - u}\\)<br>\\(f - u = nf \\implies u = (1 - n)f\\).<br>Thus, the object distance from the mirror is \\((n - 1)f\\) in front of the mirror."
+            },
+            {
+                id: 35,
+                category: "mirrors",
+                tag: "Mirrors",
+                question: "An object is placed in front of a concave mirror of focal length \\(20\\text{ cm}\\). The virtual image formed is twice the size of the object. Find the position of the object.",
+                hint: "For a virtual image, \\(m = -v/u = +2 \\implies v = -2u\\).",
+                solution: "Given: \\(f = -20\\text{ cm}, v = -2u\\).<br>Mirror formula: \\(\\frac{1}{v} + \\frac{1}{u} = \\frac{1}{f} \\implies \\frac{1}{-2u} + \\frac{1}{u} = \\frac{1}{-20}\\)<br>\\(\\frac{1}{2u} = -\\frac{1}{20} \\implies 2u = -20 \\implies u = -10\\text{ cm}\\).<br>The object is placed at a distance of \\(10\\text{ cm}\\) in front of the mirror."
+            },
+            {
+                id: 36,
+                category: "mirrors",
+                tag: "Mirrors",
+                question: "A thin rod of length \\(f/3\\) is placed along the principal axis of a concave mirror of focal length \\(f\\) such that its image, which is real and elongated, just touches one end of the rod. Find the magnification of the rod.",
+                hint: "For the image to touch the rod, the touch point must be at the center of curvature (\\(u = 2f\\)).",
+                solution: "For a concave mirror, the object and image coincide at the Center of Curvature \\(C\\) (distance \\(2f\\)).<br>Since the image is elongated, the rod must lie between \\(C\\) and \\(F\\).<br>One end of the rod is at \\(u_1 = 2f\\), so its image is at \\(v_1 = -2f\\).<br>The other end is at \\(u_2 = 2f - f/3 = 5f/3\\).<br>For this end:<br>\\(\\frac{1}{v_2} + \\frac{3}{-5f} = -\\frac{1}{f} \\implies \\frac{1}{v_2} = -\\frac{1}{f} + \\frac{3}{5f} = -\\frac{2}{5f} \\implies v_2 = -2.5f\\).<br>Length of image: \\(L' = |v_2 - v_1| = 2.5f - 2f = 0.5f\\).<br>Magnification: \\(m = \\frac{L'}{L} = \\frac{0.5f}{f/3} = 1.5\\)."
+            },
+            {
+                id: 37,
+                category: "mirrors",
+                tag: "Mirror Velocity",
+                question: "A passenger in a car looks into the side-view convex mirror (\\(R = 2\\text{ m}\\)). He notices a jogger running towards him. If the jogger is running at a speed of \\(5\\text{ m/s}\\), how fast does the image of the jogger appear to move when the jogger is \\(39\\text{ m}\\) away?",
+                hint: "Here, \\(f = R/2 = 1\\text{ m}\\) and \\(u = -39\\text{ m}\\). Use the formula \\(v_I = -\\left(\\frac{f}{u-f}\\right)^2 v_O\\).",
+                solution: "For convex mirror: \\(f = +1\\text{ m}\\). Jogger position: \\(u = -39\\text{ m}\\).<br>Velocity relation: \\(v_I = \\left(\\frac{f}{u-f}\\right)^2 v_O\\) (ignoring sign for speed).<br>\\(v_I = \\left(\\frac{1}{-39 - 1}\\right)^2 \\times 5 = \\left(\\frac{1}{-40}\\right)^2 \\times 5 = \\frac{5}{1600} = \\frac{1}{320}\\text{ m/s}\\)."
+            },
+            {
+                id: 38,
+                category: "combinations",
+                tag: "Layered Lens",
+                question: "A lens is made of three horizontal layers of different materials of refractive indices \\(\\mu_1 = 1.4\\), \\(\\mu_2 = 1.5\\), and \\(\\mu_3 = 1.6\\). How many images of a single point object on the principal axis will be formed by this lens?",
+                hint: "Each material layer creates a different focal length for light passing through it.",
+                solution: "Since the layers are horizontal, light passing through each layer is refracted according to its distinct refractive index.<br>This results in three different focal lengths.<br>Therefore, the lens forms **three** distinct images of a single point object."
+            },
+            {
+                id: 39,
+                category: "combinations",
+                tag: "Cutting Lenses",
+                question: "A convex lens of focal length \\(f = 20\\text{ cm}\\) is cut into two halves along its principal axis. The two halves are separated by a distance of \\(2\\text{ mm}\\) vertically. A point object is placed at a distance of \\(30\\text{ cm}\\) from the lens on the line of symmetry. Find the distance between the two images formed.",
+                hint: "The separation of the lens halves shifts the principal axes of the two halves. Find the image positions relative to their shifted axes.",
+                solution: "The lens axes are separated by \\(2\\text{ mm}\\). Each half has its own principal axis, separated from the line of symmetry by \\(d = 1\\text{ mm}\\).<br>The object lies on the line of symmetry, which is \\(1\\text{ mm}\\) below the axis of the upper half and \\(1\\text{ mm}\\) above the axis of the lower half.<br>For either lens half: \\(u = -30\\text{ cm}, f = 20\\text{ cm}\\).<br>\\(\\frac{1}{v} - \\frac{1}{-30} = \\frac{1}{20} \\implies v = +60\\text{ cm}\\).<br>Magnification: \\(m = \\frac{v}{u} = \\frac{60}{-30} = -2\\).<br>For the upper half:<br>Object is \\(1\\text{ mm}\\) below its axis. Image position: \\(y_i = m \\times y_o = (-2) \\times (-1\\text{ mm}) = +2\\text{ mm}\\) (above its axis).<br>So the image is \\(2 + 1 = 3\\text{ mm}\\) above the line of symmetry.<br>By symmetry, the second image is \\(3\\text{ mm}\\) below the line of symmetry.<br>Distance between images: \\(3 - (-3) = 6\\text{ mm}\\)."
+            },
+            {
+                id: 40,
+                category: "lensmaker",
+                tag: "Displacement Method",
+                question: "In a displacement method experiment, the sizes of the images in the two positions of the lens are \\(9\\text{ cm}\\) and \\(4\\text{ cm}\\) respectively. Find the actual size of the object.",
+                hint: "The size of the object \\(O\\) is related to conjugate image sizes \\(I_1, I_2\\) by \\(O = \\sqrt{I_1 \\cdot I_2}\\).",
+                solution: "Using the conjugate relation for magnification:<br>\\(O = \\sqrt{I_1 I_2}\\)<br>Substitute the values:<br>\\(O = \\sqrt{9 \\times 4} = \\sqrt{36} = 6\\text{ cm}\\)."
+            },
+            {
+                id: 41,
+                category: "mirrors",
+                tag: "Slab & Mirror",
+                question: "A glass slab (\\(\\mu = 1.5\\)) of thickness \\(3\\text{ cm}\\) is placed in front of a concave mirror of focal length \\(10\\text{ cm}\\). An object is placed at a distance of \\(21\\text{ cm}\\) from the mirror. At what distance from the mirror will the final image be formed?",
+                hint: "The glass slab shifts the light rays, creating a virtual object for the mirror. Calculate this shift.",
+                solution: "Normal shift produced by the slab:<br>\\(\\Delta t = t\\left(1 - \\frac{1}{\\mu}\\right) = 3\\left(1 - \\frac{1}{1.5}\\right) = 3\\left(\\frac{0.5}{1.5}\\right) = 1\\text{ cm}\\).<br>The apparent distance of the object from the mirror is:<br>\\(u' = u - \\Delta t = 21 - 1 = 20\\text{ cm}\\).<br>Since \\(f = -10\\text{ cm}\\), the object is at \\(u' = 20\\text{ cm} = 2f\\) (Center of Curvature).<br>Thus, the mirror forms the image at the Center of Curvature, which is \\(20\\text{ cm}\\) from the mirror. The slab shifts the reflecting rays back, so the final image is formed at its actual position: \\(20\\text{ cm}\\) from the mirror."
+            },
+            {
+                id: 42,
+                category: "combinations",
+                tag: "Lens-Mirror System",
+                question: "A converging lens of focal length \\(20\\text{ cm}\\) and a concave mirror of focal length \\(10\\text{ cm}\\) are coaxially placed \\(50\\text{ cm}\\) apart. A point object is placed midway between them. Find the position of the final image formed by light reflecting first from the mirror and then refracting through the lens.",
+                hint: "First find the image formed by the mirror, then use it as the object for the lens.",
+                solution: "Object is midway, so \\(u = -25\\text{ cm}\\) from the mirror.<br>Mirror equation:<br>\\(\\frac{1}{v_1} + \\frac{1}{-25} = -\\frac{1}{10} \\implies \\frac{1}{v_1} = -\\frac{1}{10} + \\frac{1}{25} = -\\frac{3}{50} \\implies v_1 = -16.67\\text{ cm}\\) in front of the mirror.<br>Distance of this first image from the lens:<br>\\(u_2 = -(50 - 16.67) = -33.33\\text{ cm}\\) (or \\(-100/3\\text{ cm}\\)).<br>Lens equation:<br>\\(\\frac{1}{v_2} - \\frac{1}{-100/3} = \\frac{1}{20} \\implies \\frac{1}{v_2} + \\frac{3}{100} = \\frac{1}{20}\\)<br>\\(\\frac{1}{v_2} = \\frac{1}{20} - \\frac{3}{100} = \\frac{5 - 3}{100} = \\frac{2}{100} = \\frac{1}{50} \\implies v_2 = +50\\text{ cm}\\).<br>The final image is formed at a distance of \\(50\\text{ cm}\\) behind the lens."
+            },
+            {
+                id: 43,
+                category: "combinations",
+                tag: "Slab & Lens",
+                question: "A point object is placed at the center of a glass beaker filled with water (\\(\\mu = 4/3\\)) up to a height of \\(8\\text{ cm}\\). A convex lens of focal length \\(15\\text{ cm}\\) is placed coaxially \\(10\\text{ cm}\\) above the water surface. Find the position of the final image.",
+                hint: "Find the apparent shift of the object due to the water layer, then apply the lens formula.",
+                solution: "The object is at the bottom of the beaker (height \\(8\\text{ cm}\\)).<br>Shift due to water: \\(\\Delta y = h\\left(1 - \\frac{1}{\\mu}\\right) = 8\\left(1 - \\frac{3}{4}\\right) = 2\\text{ cm}\\).<br>The apparent position of the object is shifted upwards by \\(2\\text{ cm}\\).<br>Actual object distance from lens = height of water + distance of lens = \\(8 + 10 = 18\\text{ cm}\\).<br>Apparent object distance for lens: \\(u = -(18 - 2) = -16\\text{ cm}\\).<br>Lens equation:<br>\\(\\frac{1}{v} - \\frac{1}{-16} = \\frac{1}{15} \\implies \\frac{1}{v} = \\frac{1}{15} - \\frac{1}{16} = \\frac{1}{240} \\implies v = +240\\text{ cm}\\).<br>The final image is formed at a distance of \\(240\\text{ cm}\\) behind the lens."
+            },
+            {
+                id: 44,
+                category: "lensmaker",
+                tag: "Displacement Method",
+                question: "A screen is placed at a distance of \\(80\\text{ cm}\\) from an object. A convex lens forms a sharp image on the screen at two positions separated by \\(20\\text{ cm}\\). Find the focal length of the lens.",
+                hint: "Use \\(f = \\frac{D^2 - d^2}{4D}\\) where \\(D = 80\\text{ cm}\\) and \\(d = 20\\text{ cm}\\).",
+                solution: "Using the formula:<br>\\(f = \\frac{D^2 - d^2}{4D}\\)<br>Substitute \\(D = 80\\) and \\(d = 20\\):<br>\\(f = \\frac{80^2 - 20^2}{4 \\times 80} = \\frac{6400 - 400}{320} = \\frac{6000}{320} = 18.75\\text{ cm}\\)."
+            },
+            {
+                id: 45,
+                category: "combinations",
+                tag: "Lens Combinations",
+                question: "A plano-convex lens (\\(\\mu = 1.5, R = 10\\text{ cm}\\)) is placed on a horizontal table with its curved surface in contact with the table. The space between the lens and the table is filled with water (\\(\\mu_w = 4/3\\)). Find the focal length of this combined system.",
+                hint: "This behaves as a combination of two lenses: a plano-convex glass lens and a plano-concave water lens.",
+                solution: "Glass lens (plano-convex): \\(R_1 = \\infty, R_2 = -10\\text{ cm}\\).<br>\\(\\frac{1}{f_g} = (1.5 - 1)\\left(\\frac{1}{\\infty} - \\frac{1}{-10}\\right) = \\frac{0.5}{10} = \\frac{1}{20}\\text{ cm}^{-1}\\).<br>Water lens (plano-concave): \\(R_1 = -10\\text{ cm}, R_2 = \\infty\\).<br>\\(\\frac{1}{f_w} = (4/3 - 1)\\left(\\frac{1}{-10} - \\frac{1}{\\infty}\\right) = \\frac{1}{3} \\times \\left(-\\frac{1}{10}\\right) = -\\frac{1}{30}\\text{ cm}^{-1}\\).<br>Combined system:<br>\\(\\frac{1}{f_{\\text{eq}}} = \\frac{1}{f_g} + \\frac{1}{f_w} = \\frac{1}{20} - \\frac{1}{30} = \\frac{3 - 2}{60} = \\frac{1}{60} \\implies f_{\\text{eq}} = +60\\text{ cm}\\)."
+            },
+            {
+                id: 46,
+                category: "lensmaker",
+                tag: "Lens Formula",
+                question: "A thin converging lens forms a real image of a point object on its principal axis. If the lens is moved a distance \\(x\\) along the axis, the image moves a distance \\(y\\). Show how these displacements are related to the magnification \\(m\\) of the lens.",
+                hint: "Differentiate the lens formula \\(\\frac{1}{v} - \\frac{1}{u} = \\frac{1}{f}\\) with respect to position.",
+                solution: "Differentiating \\(\\frac{1}{v} - \\frac{1}{u} = \\frac{1}{f}\\) for a constant focal length \\(f\\):<br>\\(-\\frac{1}{v^2} dv + \\frac{1}{u^2} du = 0 \\implies dv = \\left(\\frac{v}{u}\\right)^2 du\\).<br>Since magnification \\(m = v/u\\), we have:<br>\\(dy = m^2 dx\\).<br>Thus, the image displacement \\(y\\) is related to the lens displacement \\(x\\) by \\(y \\approx m^2 x\\)."
+            },
+            {
+                id: 47,
+                category: "plane",
+                tag: "Prism Refraction",
+                question: "A ray of light is incident at an angle \\(i\\) on one face of a thin prism of small angle \\(A\\) and emerges normally from the opposite face. If the refractive index of the prism is \\(\\mu\\), find the relationship between \\(i\\), \\(A\\), and \\(\\mu\\).",
+                hint: "Since the ray emerges normally, the angle of emergence \\(e = 0\\), which implies \\(r_2 = 0\\). Use \\(r_1 + r_2 = A\\).",
+                solution: "For normal emergence: \\(e = 0 \\implies r_2 = 0\\).<br>Since \\(r_1 + r_2 = A\\), we have \\(r_1 = A\\).<br>Applying Snell's law at the first face:<br>\\(\\sin i = \\mu \\sin r_1 = \\mu \\sin A\\).<br>For small angles, \\(\\sin i \\approx i\\) and \\(\\sin A \\approx A\\).<br>Therefore, \\(i \\approx \\mu A\\)."
+            },
+            {
+                id: 48,
+                category: "spherical",
+                tag: "Spherical Refraction",
+                question: "A glass rod of refractive index \\(1.5\\) has a hemispherical end of radius of curvature \\(10\\text{ cm}\\). A point object is placed in air at a distance \\(u\\) from the pole. If the image is formed inside the glass at a distance of \\(30\\text{ cm}\\) from the pole, find the value of \\(u\\).",
+                hint: "Use \\(\\frac{\\mu_2}{v} - \\frac{\\mu_1}{u} = \\frac{\\mu_2 - \\mu_1}{R}\\) with \\(\\mu_1 = 1, \\mu_2 = 1.5, v = +30\\text{ cm}, R = +10\\text{ cm}\\).",
+                solution: "Using the formula: \\(\\frac{1.5}{30} - \\frac{1}{u} = \\frac{1.5 - 1.0}{10}\\)<br>\\(\\frac{1}{20} - \\frac{1}{u} = \\frac{0.5}{10} = \\frac{1}{20}\\)<br>\\(-\\frac{1}{u} = 0 \\implies u \\to -\\infty\\).<br>The object must be placed at infinity."
+            },
+            {
+                id: 49,
+                category: "lensmaker",
+                tag: "Lens Maker's",
+                question: "A convex lens of glass (\\(\\mu_g = 1.5\\)) has a focal length of \\(8\\text{ cm}\\) in air. When immersed in a liquid of refractive index \\(\\mu_l\\), its focal length becomes \\(-32\\text{ cm}\\). Find the value of \\(\\mu_l\\).",
+                hint: "Set up the ratio: \\(\\frac{f_l}{f_a} = \\frac{\\mu_g - 1}{\\frac{\\mu_g}{\\mu_l} - 1}\\). Watch the signs.",
+                solution: "Given: \\(f_a = 8\\text{ cm}, f_l = -32\\text{ cm}\\).<br>\\(\\frac{-32}{8} = \\frac{1.5 - 1}{\\frac{1.5}{\\mu_l} - 1} \\implies -4 = \\frac{0.5}{\\frac{1.5}{\\mu_l} - 1}\\)<br>\\(\\frac{1.5}{\\mu_l} - 1 = -\\frac{0.5}{4} = -0.125\\)<br>\\(\\frac{1.5}{\\mu_l} = 1 - 0.125 = 0.875 = \\frac{7}{8}\\)<br>\\(\\mu_l = 1.5 \\times \\frac{8}{7} = \\frac{12}{7} \\approx 1.71\\)."
+            },
+            {
+                id: 50,
+                category: "combinations",
+                tag: "Lens Combinations",
+                question: "An equi-convex lens of focal length \\(20\\text{ cm}\\) is cut into two identical halves by a plane passing through its principal axis. The two pieces are then placed in contact with their curved surfaces facing each other. What is the equivalent focal length of the combination?",
+                hint: "Each half retains the focal length \\(f = 20\\text{ cm}\\) when cut horizontally. Combining them back-to-back acts as two thin lenses in contact.",
+                solution: "Since the lens is cut along the principal axis, each half has focal length \\(f = 20\\text{ cm}\\).<br>When placed in contact, their equivalent focal length \\(f_{\\text{eq}}\\) is:<br>\\(\\frac{1}{f_{\\text{eq}}} = \\frac{1}{f} + \\frac{1}{f} = \\frac{2}{20} = \\frac{1}{10} \\implies f_{\\text{eq}} = 10\\text{ cm}\\)."
+            }
+        ];
+
+        // Track completed questions in localStorage
+        let completedQuestions = JSON.parse(localStorage.getItem('solved_optics_questions')) || {};
+
+        function renderQuestions() {
+            const grid = document.getElementById('questions-grid');
+            grid.innerHTML = '';
+            
+            questions.forEach(q => {
+                const isChecked = completedQuestions[q.id] ? 'checked' : '';
+                const card = document.createElement('article');
+                card.className = `card q-card-${q.category}`;
+                card.dataset.category = q.category;
+                card.dataset.id = q.id;
+                card.id = `q-card-${q.id}`;
+                
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="q-num">Q${q.id}</span>
+                        <span class="q-tag">${q.tag}</span>
+                    </div>
+                    <div class="q-body">
+                        ${q.question}
+                    </div>
+                    
+                    <div class="drawer" id="hint-drawer-${q.id}">
+                        <div class="drawer-content hint-mode">
+                            <strong>Hint:</strong> ${q.hint}
+                        </div>
+                    </div>
+                    
+                    <div class="drawer" id="sol-drawer-${q.id}">
+                        <div class="drawer-content solution-mode">
+                            <strong>Step-by-step Solution:</strong><br>${q.solution}
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <button class="action-btn" onclick="toggleDrawer('hint-drawer-${q.id}', this)">
+                            Show Hint
+                        </button>
+                        <button class="action-btn" onclick="toggleDrawer('sol-drawer-${q.id}', this)">
+                            Show Answer
+                        </button>
+                        <label class="completed-checkbox">
+                            <input type="checkbox" ${isChecked} onchange="toggleComplete(${q.id}, this)">
+                            Mark Solved
+                        </label>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            
+            if (window.renderMathInElement) {
+                renderMathInElement(grid);
+            }
+            updateTracker();
+        }
+
+        function toggleDrawer(id, btn) {
+            const drawer = document.getElementById(id);
+            const isOpen = drawer.classList.contains('open');
+            
+            // Close other drawers in the same card
+            const card = drawer.closest('.card');
+            card.querySelectorAll('.drawer').forEach(d => {
+                if (d.id !== id) {
+                    d.classList.remove('open');
+                }
+            });
+            card.querySelectorAll('.action-btn').forEach(b => {
+                if (b !== btn) {
+                    b.classList.remove('active-btn');
+                }
+            });
+
+            if (isOpen) {
+                drawer.classList.remove('open');
+                btn.classList.remove('active-btn');
+            } else {
+                drawer.classList.add('open');
+                btn.classList.add('active-btn');
+            }
+        }
+
+        function toggleComplete(id, checkbox) {
+            if (checkbox.checked) {
+                completedQuestions[id] = true;
+            } else {
+                delete completedQuestions[id];
+            }
+            localStorage.setItem('solved_optics_questions', JSON.stringify(completedQuestions));
+            updateTracker();
+        }
+
+        function updateTracker() {
+            const count = Object.keys(completedQuestions).length;
+            document.getElementById('tracker-text').innerText = `${count} / 50 Solved`;
+            const pct = (count / 50) * 100;
+            document.getElementById('progress-fill').style.width = `${pct}%`;
+        }
+
+        function filterCategory(cat, tabBtn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tabBtn.classList.add('active');
+
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                if (cat === 'all' || card.dataset.category === cat) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('search-bar').value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                const text = card.innerText.toLowerCase();
+                if (text.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderQuestions();
+        });
+    </script>
+</body>
+</html>

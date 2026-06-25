@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refraction Quiz - JEE Advanced Level</title>
+    
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #060713;
+            --surface: #101226;
+            --border: rgba(255, 255, 255, 0.12);
+            --accent-primary: #6366f1;
+            --accent-success: #10b981;
+            --accent-error: #ef4444;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .workspace {
+            flex: 1;
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr) auto;
+            height: 100vh;
+            position: relative;
+        }
+
+        header {
+            background: var(--surface);
+            border-bottom: 2px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .header-left h1 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #6366f1, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-left p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .presenter-controls {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-primary);
+        }
+
+        .btn.active {
+            background: var(--accent-primary) !important;
+            color: white !important;
+            border-color: var(--accent-primary) !important;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn.danger-btn.active {
+            background: var(--accent-error) !important;
+            border-color: var(--accent-error) !important;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .board-container {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+            padding: 2rem;
+            align-items: stretch;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .left-board {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background: rgba(16, 18, 38, 0.4);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .locked-blur {
+            filter: blur(15px);
+            pointer-events: none;
+            transition: filter 0.3s ease;
+        }
+
+        .start-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(6, 7, 19, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 8;
+            transition: opacity 0.3s ease;
+        }
+
+        .start-circle-btn {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), #4f46e5);
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .start-circle-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 45px rgba(99, 102, 241, 0.6);
+            border-color: #fff;
+        }
+
+        .q-tag {
+            font-size: 1rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            padding: 0.4rem 1.2rem;
+            border-radius: 9999px;
+            width: fit-content;
+            font-weight: 700;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .q-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.4;
+            color: #fff;
+        }
+
+        .svg-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .right-board {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .opt-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 1.2rem 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .opt-card:hover {
+            border-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .opt-card.correct {
+            background: rgba(16, 185, 129, 0.12) !important;
+            border-color: var(--accent-success) !important;
+            color: #10b981;
+        }
+
+        .opt-letter {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.6rem;
+            color: var(--accent-primary);
+            margin-right: 1.5rem;
+            background: rgba(99, 102, 241, 0.1);
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .award-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .award-banner {
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--accent-success);
+        }
+
+        .award-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+        }
+
+        .award-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 0.6rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .award-btn:hover {
+            border-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .solution-panel {
+            background: rgba(16, 18, 129, 0.05);
+            border: 2px solid rgba(16, 185, 129, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            font-size: 1.15rem;
+            line-height: 1.6;
+            color: #d1d5db;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .solution-panel h3 {
+            color: var(--accent-success);
+            font-size: 1.4rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .blackboard-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .blackboard-canvas.active {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+
+        footer {
+            background: var(--surface);
+            border-top: 2px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .nav-section {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .scoreboard {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .score-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 0.4rem 1rem;
+            border-radius: 12px;
+        }
+
+        .score-box .team-lbl {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .score-box .score-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .score-adjust {
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-adjust:hover {
+            background: var(--accent-primary);
+        }
+
+        svg {
+            transform: scale(1.15);
+            transform-origin: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="workspace active">
+        <header>
+            <div class="header-left">
+                <h1>Refraction Quiz</h1>
+                <p id="question-index-lbl">
+                    Question 1 of 15 &bull; 
+                    <span id="timer-el" style="color:var(--accent-primary); font-weight:700; margin-right:1rem;">Question Timer: 0s</span>
+                    <button class="btn" id="btn-pause-timer" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; display: inline-flex; margin-right: 0.5rem;" onclick="togglePauseTimer()" disabled>Pause</button>
+                    <button class="btn" id="btn-stop-timer" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; display: inline-flex;" onclick="stopQuestionTimer()" disabled>Stop</button>
+                </p>
+            </div>
+            
+            <div class="presenter-controls">
+                <button class="btn" id="btn-options" onclick="toggleOptions()">Toggle Options (O)</button>
+                <button class="btn" id="btn-answer" onclick="toggleAnswer()">Show Answer (A)</button>
+                <button class="btn" id="btn-solution" onclick="toggleSolution()">Show Solution (S)</button>
+                <button class="btn danger-btn" id="btn-draw" onclick="toggleDrawMode()">Draw Mode (D)</button>
+                <button class="btn" onclick="clearCanvas()">Clear Board</button>
+            </div>
+        </header>
+
+        <main class="board-container">
+            <canvas class="blackboard-canvas" id="blackboard"></canvas>
+
+            <div class="left-board" id="left-board-el">
+                <div class="start-overlay" id="start-overlay-el">
+                    <button class="start-circle-btn" onclick="startQuestionTimer()">START</button>
+                </div>
+
+                <div class="locked-blur" id="question-content-el">
+                    <div class="q-tag" id="q-tag-el">Snell's Law</div>
+                    <div class="q-title" id="q-title-el">
+                        Loading...
+                    </div>
+                    <div class="svg-wrap" id="q-svg-wrap" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="right-board">
+                <div class="options-list" id="options-list-el" style="display: none;"></div>
+
+                <div class="award-panel" id="award-panel-el">
+                    <div class="award-banner" id="award-banner-el">Worth 5 Points!</div>
+                    <div class="award-buttons">
+                        <button class="award-btn" onclick="awardPointsTo('A')">Award Team A</button>
+                        <button class="award-btn" onclick="awardPointsTo('B')">Award Team B</button>
+                        <button class="award-btn" onclick="awardPointsTo('C')">Award Team C</button>
+                        <button class="award-btn" onclick="awardPointsTo('QM')" style="border-color:var(--accent-error); color:#fca5a5;">Award QM</button>
+                    </div>
+                </div>
+
+                <div class="solution-panel" id="solution-panel-el" style="display: none;">
+                    <h3>Step-by-step Solution</h3>
+                    <div id="solution-text-el">Solution...</div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="nav-section">
+                <button class="btn" onclick="location.href='index.html'">Home 🏠</button>
+                <button class="btn" onclick="prevQuestion()">&larr; Previous</button>
+                <button class="btn" onclick="nextQuestion()">Next &rarr;</button>
+            </div>
+
+            <div class="scoreboard">
+                <span style="font-weight: 700; color: var(--text-muted);">SCOREBOARD:</span>
+                <div class="score-box">
+                    <span class="team-lbl" style="color: #ef4444;">Team A</span>
+                    <button class="score-adjust" onclick="adjustScore('A', -1)">-</button>
+                    <span class="score-val" id="score-A">0</span>
+                    <button class="score-adjust" onclick="adjustScore('A', 1)">+</button>
+                </div>
+                <div class="score-box">
+                    <span class="team-lbl" style="color: #6366f1;">Team B</span>
+                    <button class="score-adjust" onclick="adjustScore('B', -1)">-</button>
+                    <span class="score-val" id="score-B">0</span>
+                    <button class="score-adjust" onclick="adjustScore('B', 1)">+</button>
+                </div>
+                <div class="score-box">
+                    <span class="team-lbl" style="color: #10b981;">Team C</span>
+                    <button class="score-adjust" onclick="adjustScore('C', -1)">-</button>
+                    <span class="score-val" id="score-C">0</span>
+                    <button class="score-adjust" onclick="adjustScore('C', 1)">+</button>
+                </div>
+                <div class="score-box" style="border-color: var(--accent-error);">
+                    <span class="team-lbl" style="color: #ef4444; font-weight:800;">Quizmaster</span>
+                    <button class="score-adjust" onclick="adjustScore('QM', -1)">-</button>
+                    <span class="score-val" id="score-QM" style="color: var(--accent-error);">0</span>
+                    <button class="score-adjust" onclick="adjustScore('QM', 1)">+</button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                id: 1,
+                tag: "Snell's Law (Vector Form)",
+                question: "A ray of light traveling in air is incident on a glass boundary at \\(y=0\\). The incident ray unit vector is \\(\\hat{u}_i = \\frac{1}{\\sqrt{2}}\\hat{i} - \\frac{1}{\\sqrt{2}}\\hat{j}\\). If the refractive index of the glass is \\(\\mu = \\sqrt{2}\\), find the unit vector along the refracted ray.",
+                options: [
+                    "\\(\\frac{1}{2}\\hat{i} - \\frac{\\sqrt{3}}{2}\\hat{j}\\)",
+                    "\\(\\frac{\\sqrt{3}}{2}\\hat{i} - \\frac{1}{2}\\hat{j}\\)",
+                    "\\(\\frac{1}{\\sqrt{2}}\\hat{i} - \\frac{1}{\\sqrt{2}}\\hat{j}\\)",
+                    "\\(\\frac{1}{2}\\hat{i} - \\frac{1}{2}\\hat{j}\\)"
+                ],
+                correctIndex: 0,
+                solution: "Let the interface be \\(y=0\\). The unit normal pointing into the refracting medium is \\(\\hat{n} = -\\hat{j}\\).<br>Angle of incidence \\(\\theta_1\\) satisfies:<br>\\(\\cos\\theta_1 = |\\hat{u}_i \\cdot (-\\hat{j})| = \\frac{1}{\\sqrt{2}} \\implies \\theta_1 = 45^\\circ\\).<br>Using Snell's Law:<br>\\(\\mu_1 \\sin\\theta_1 = \\mu_2 \\sin\\theta_2 \\implies 1 \\cdot \\sin 45^\\circ = \\sqrt{2} \\cdot \\sin\\theta_2 \\implies \\sin\\theta_2 = \\frac{1}{2} \\implies \\theta_2 = 30^\\circ\\).<br>The refracted ray unit vector is:<br>\\(\\hat{u}_r = \\sin\\theta_2 \\hat{i} - \\cos\\theta_2 \\hat{j} = \\frac{1}{2}\\hat{i} - \\frac{\\sqrt{3}}{2}\\hat{j}\\).",
+                svg: `
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                    <line x1="10" y1="60" x2="210" y2="60" stroke="#9ca3af" stroke-width="2"/>
+                    <line x1="110" y1="10" x2="110" y2="110" stroke="#9ca3af" stroke-dasharray="3" stroke-width="1"/>
+                    <text x="15" y="50" fill="#9ca3af" font-size="10">Air (μ=1)</text>
+                    <text x="15" y="75" fill="#9ca3af" font-size="10">Glass (μ=√2)</text>
+                    <!-- Incident ray -->
+                    <line x1="60" y1="10" x2="110" y2="60" stroke="#ef4444" stroke-width="2"/>
+                    <polygon points="90,40 85,35 88,44" fill="#ef4444"/>
+                    <!-- Refracted ray -->
+                    <line x1="110" y1="60" x2="139" y2="110" stroke="#10b981" stroke-width="2"/>
+                    <polygon points="122,81 126,85 119,89" fill="#10b981"/>
+                </svg>`
+            },
+            {
+                id: 2,
+                tag: "Variable Refractive Index",
+                question: "A light ray traveling in a medium with refractive index \\(\\mu(y) = \\mu_0\\sqrt{1 + ay}\\) is incident at the origin \\((0,0)\\) at an angle of \\(30^\\circ\\) with the y-axis (vertical). What is the equation of the trajectory of the ray?",
+                options: [
+                    "\\(x = \\frac{1}{2a}\\left(\\sqrt{3 + 4ay} - \\sqrt{3}\\right)\\)",
+                    "\\(x = \\frac{1}{2a}\\left(\\sqrt{4ay - 3} + \\sqrt{3}\\right)\\)",
+                    "\\(x = \\frac{1}{a}\\left(\\sqrt{1 + ay} - 1\\right)\\)",
+                    "\\(x = \\frac{1}{4a}\\left(\\sqrt{3 + 4ay} - \\sqrt{3}\\right)\\)"
+                ],
+                correctIndex: 0,
+                solution: "By Snell's Law in a stratified medium:<br>\\(\\mu(y) \\sin\\theta(y) = \\text{constant}\\).<br>At \\(y=0\\): \\(\\mu(0) = \\mu_0\\), and \\(\\theta(0) = 30^\\circ\\).<br>\\(\\mu_0 \\sqrt{1 + ay} \\sin\\theta(y) = \\mu_0 \\sin 30^circ = \\frac{\\mu_0}{2}\\)<br>\\(\\sin\\theta(y) = \\frac{1}{2\\sqrt{1 + ay}}\\).<br>Since \\(\\tan\\theta = \\frac{dx}{dy}\\):<br>\\(\\frac{dx}{dy} = \\frac{\\sin\\theta}{\\sqrt{1-\\sin^2\\theta}} = \\frac{1}{\\sqrt{4(1+ay)-1}} = \\frac{1}{\\sqrt{3+4ay}}\\).<br>Integrating: \\(x = \\int_0^y \\frac{dy}{\\sqrt{3+4ay}} = \\left[ \\frac{2}{4a} \\sqrt{3+4ay} \\right]_0^y = \\frac{1}{2a}\\left(\\sqrt{3+4ay} - \\sqrt{3}\\right)\\).",
+                svg: `
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                    <line x1="20" y1="110" x2="200" y2="110" stroke="#9ca3af" stroke-width="1.5"/>
+                    <line x1="20" y1="110" x2="20" y2="10" stroke="#9ca3af" stroke-dasharray="3" stroke-width="1"/>
+                    <text x="25" y="20" fill="#9ca3af" font-size="9">y (Depth)</text>
+                    <text x="185" y="105" fill="#9ca3af" font-size="9">x</text>
+                    <!-- Curved ray path -->
+                    <path d="M 20 110 Q 70 80 150 40" fill="none" stroke="#6366f1" stroke-width="2"/>
+                    <polygon points="85,73 93,73 89,66" fill="#6366f1"/>
+                </svg>`
+            },
+            {
+                id: 3,
+                tag: "Apparent Depth (Variable Index)",
+                question: "A glass slab of thickness \\(H\\) has a variable refractive index given by \\(\\mu(y) = \\mu_0\\left(1 + \\frac{y}{H}\\right)\\), where \\(y\\) is the distance from the top surface. What is the apparent thickness of the slab when viewed normally from the top?",
+                options: [
+                    "\\(\\frac{H}{\\mu_0} \\ln 2\\)",
+                    "\\(\\frac{H}{2\\mu_0}\\)",
+                    "\\(\\frac{H}{\\mu_0} (\\ln 2 - 1)\\)",
+                    "\\(\\frac{H}{\\mu_0}\\)"
+                ],
+                correctIndex: 0,
+                solution: "For an infinitesimally thin element of thickness \\(dy\\) at depth \\(y\\), the apparent thickness is:<br>\\(dd_{\\text{app}} = \\frac{dy}{\\mu(y)}\\).<br>Integrating from \\(y=0\\) to \\(H\\):<br>\\(d_{\\text{app}} = \\int_0^H \\frac{dy}{\\mu_0(1 + y/H)} = \\frac{H}{\\mu_0} \\left[ \\ln(1 + y/H) \\right]_0^H = \\frac{H}{\\mu_0} \\ln 2\\).",
+                svg: null
+            },
+            {
+                id: 4,
+                tag: "Apparent Shift & Velocity",
+                question: "A glass slab of thickness 3 cm and refractive index 1.5 is placed in front of a stationary plane mirror. A point object in front of the slab is stationary. If the glass slab starts moving towards the mirror with a speed of 2 cm/s, what is the speed of the final image of the object formed by the mirror?",
+                options: [
+                    "0 cm/s",
+                    "2 cm/s",
+                    "4 cm/s",
+                    "1 cm/s"
+                ],
+                correctIndex: 0,
+                solution: "The apparent shift produced by a slab is \\(S = t\\left(1 - \\frac{1}{\\mu}\\right)\\).<br>Here, \\(S = 3\\left(1 - \\frac{1}{1.5}\\right) = 1\\text{ cm}\\).<br>This shift is independent of the slab's position. Since the object is stationary, its apparent position relative to the mirror remains constant regardless of the slab's motion. Therefore, the image formed by the mirror is stationary, and its speed is 0 cm/s.",
+                svg: `
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                    <!-- Object -->
+                    <circle cx="20" cy="60" r="4" fill="#ef4444"/>
+                    <text x="12" y="50" fill="#fff" font-size="9">O</text>
+                    <!-- Slab -->
+                    <rect x="70" y="25" width="40" height="70" fill="#6366f1" opacity="0.4" stroke="#a5b4fc" stroke-width="1.5"/>
+                    <text x="75" y="20" fill="#6366f1" font-size="9">v = 2 cm/s</text>
+                    <!-- Mirror -->
+                    <line x1="170" y1="20" x2="170" y2="100" stroke="#fff" stroke-width="3"/>
+                    <line x1="170" y1="30" x2="175" y2="25" stroke="#9ca3af" stroke-width="1"/>
+                    <line x1="170" y1="50" x2="175" y2="45" stroke="#9ca3af" stroke-width="1"/>
+                    <line x1="170" y1="70" x2="175" y2="65" stroke="#9ca3af" stroke-width="1"/>
+                </svg>`
+            },
+            {
+                id: 5,
+                tag: "Multiple Medium Refraction",
+                question: "A vessel contains water (\\(\\mu=4/3\\)) up to 12 cm height and oil (\\(\\mu=1.5\\)) up to 9 cm height above water. An observer looks at a small coin at the bottom of the vessel from vertically above. The apparent shift in the position of the coin is:",
+                options: [
+                    "6 cm",
+                    "5 cm",
+                    "4 cm",
+                    "7 cm"
+                ],
+                correctIndex: 0,
+                solution: "The total apparent shift \\(S\\) is the sum of shifts due to each medium:<br>\\(S = S_{\\text{water}} + S_{\\text{oil}}\\)<br>\\(S = h_1\\left(1 - \\frac{1}{\\mu_1}\\right) + h_2\\left(1 - \\frac{1}{\\mu_2}\\right)\\)<br>\\(S = 12\\left(1 - \\frac{3}{4}\\right) + 9\\left(1 - \\frac{1}{1.5}\\right) = 12(0.25) + 9(1/3) = 3 + 3 = 6\\text{ cm}\\).",
+                svg: null
+            },
+            {
+                id: 6,
+                tag: "Total Internal Reflection",
+                question: "A point source of light is placed at the bottom of a water tank of depth \\(\\sqrt{7}\\) m. What is the minimum radius of a circular opaque disc floating on the water surface so that light from the source does not escape from the surface? (Take \\(\\mu_{\\text{water}} = 4/3\\))",
+                options: [
+                    "3 m",
+                    "\\(\\sqrt{7}\\) m",
+                    "4 m",
+                    "2 m"
+                ],
+                correctIndex: 0,
+                solution: "Rays escaping the surface must have an angle of incidence less than the critical angle \\(\\theta_c\\). The boundary of escaping rays is defined by: \\(\\sin\\theta_c = \\frac{1}{\\mu} = \\frac{3}{4}\\).<br>From trigonometry, \\(\\tan\\theta_c = \\frac{R}{d}\\), where \\(R\\) is the radius of the disc and \\(d\\) is the depth.<br>\\(R = d \\tan\\theta_c = d \\frac{\\sin\\theta_c}{\\sqrt{1 - \\sin^2\\theta_c}} = d \\frac{1/\\mu}{\\sqrt{1 - 1/\\mu^2}} = \\frac{d}{\\sqrt{\\mu^2 - 1}}\\).<br>Substituting values:<br>\\(R = \\frac{\\sqrt{7}}{\\sqrt{16/9 - 1}} = \\frac{\\sqrt{7}}{\\sqrt{7/9}} = \\sqrt{7} \\times \\frac{3}{\\sqrt{7}} = 3\\text{ m}\\).",
+                svg: `
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                    <line x1="20" y1="30" x2="200" y2="30" stroke="#6366f1" stroke-width="1.5"/>
+                    <rect x="75" y="27" width="70" height="6" fill="#fff"/>
+                    <text x="85" y="20" fill="#fff" font-size="8">Disc (Radius R)</text>
+                    <circle cx="110" cy="100" r="4" fill="#ef4444"/>
+                    <text x="110" y="112" fill="#ef4444" font-size="8">Source</text>
+                    <!-- Rays -->
+                    <line x1="110" y1="100" x2="75" y2="30" stroke="#10b981" stroke-width="1" stroke-dasharray="3"/>
+                    <line x1="110" y1="100" x2="145" y2="30" stroke="#10b981" stroke-width="1" stroke-dasharray="3"/>
+                </svg>`
+            },
+            {
+                id: 7,
+                tag: "TIR in Prisms",
+                question: "A right-angled isosceles prism of refractive index \\(\\mu_1 = 1.5\\) is placed in a liquid of refractive index \\(\\mu_2\\). A ray of light is incident normally on one of the perpendicular faces. For total internal reflection to occur at the hypotenuse interface, what is the maximum value of \\(\\mu_2\\)?",
+                options: [
+                    "\\(\\frac{3}{2\\sqrt{2}}\\)",
+                    "\\(\\frac{3}{2}\\)",
+                    "\\(\\frac{4}{3}\\)",
+                    "\\(1.2\\)"
+                ],
+                correctIndex: 0,
+                solution: "For a ray entering normally, it reaches the hypotenuse at an angle of incidence of \\(45^\\circ\\).<br>For TIR to occur:<br>\\(i \\ge \\theta_c \\implies \\sin 45^\\circ \\ge \\sin\\theta_c\\)<br>\\(\\frac{1}{\\sqrt{2}} \\ge \\frac{\\mu_2}{\\mu_1} \\implies \\mu_2 \\le \\frac{\\mu_1}{\\sqrt{2}}\\).<br>Given \\(\\mu_1 = 1.5 = 3/2\\):<br>\\\(\mu_2 \\le \\frac{3}{2\\sqrt{2}} \\approx 1.06\\).",
+                svg: `
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                    <polygon points="60,10 60,110 160,110" fill="none" stroke="#fff" stroke-width="1.5"/>
+                    <line x1="20" y1="60" x2="60" y2="60" stroke="#ef4444" stroke-width="1.5"/>
+                    <line x1="60" y1="60" x2="110" y2="60" stroke="#ef4444" stroke-width="1.5"/>
+                    <line x1="110" y1="60" x2="110" y2="110" stroke="#10b981" stroke-width="1.5"/>
+                </svg>`
+            },
+            {
+                id: 8,
+                tag: "Optical Fiber (TIR)",
+                question: "A cylindrical optical fiber has a refractive index of \\(\\mu = \\sqrt{1.5}\\) and is surrounded by air. What is the maximum angle of incidence \\(\\theta\\) at the flat entrance face so that rays undergo TIR at the cylindrical side walls?",
+                options: [
+                    "\\(45^\\circ\\)",
+                    "\\(90^\\circ\\)",
+                    "\\(30^\\circ\\)",
+                    "\\(60^\\circ\\)"
+                ],
+                correctIndex: 0,
+                solution: "Let \\(\\theta\\) be the angle of incidence. The angle of refraction at the entrance is \\(r\\).<br>The angle of incidence at the side walls is \\(\\phi = 90^\\circ - r\\).<br>For TIR at the side walls: \\(\\sin\\phi \\ge \\frac{1}{\\mu} \\implies \\cos r \\ge \\frac{1}{\\mu}\\).<br>Using \\(\\cos r = \\sqrt{1 - \\sin^2 r}\\) and Snell's Law \\(\\sin\\theta = \\mu \\sin r\\):<br>\\(1 - \\frac{\\sin^2\\theta}{\\mu^2} \\ge \\frac{1}{\\mu^2} \\implies \\mu^2 - \\sin^2\\theta \\ge 1 \\implies \\sin^2\\theta \\le \\mu^2 - 1\\).<br>With \\(\\mu^2 = 1.5\\):<br>\\(\\sin^2\\theta \\le 1.5 - 1 = 0.5 \\implies \\sin\\theta \\le \\frac{1}{\\sqrt{2}} \\implies \\theta \\le 45^\\circ\\).",
+                svg: `
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                    <rect x="50" y="30" width="140" height="60" fill="none" stroke="#fff" stroke-width="1.5"/>
+                    <line x1="10" y1="80" x2="50" y2="60" stroke="#ef4444" stroke-width="1.5"/>
+                    <line x1="50" y1="60" x2="100" y2="30" stroke="#10b981" stroke-width="1.5"/>
+                    <line x1="100" y1="30" x2="150" y2="90" stroke="#10b981" stroke-width="1.5"/>
+                </svg>`
+            },
+            {
+                id: 9,
+                tag: "Refraction through Spheres",
+                question: "A ray of light is incident at an angle of \\(60^\\circ\\) on a transparent sphere of refractive index \\(\\mu = \\sqrt{3}\\). Find the total angle of deviation of the ray as it emerges from the sphere.",
+                options: [
+                    "\\(60^\\circ\\)",
+                    "\\(30^\\circ\\)",
+                    "\\(45^\\circ\\)",
+                    "\\(90^\\circ\\)"
+                ],
+                correctIndex: 0,
+                solution: "First surface refraction:<br>\\(\\sin i = \\mu \\sin r \\implies \\sin 60^\\circ = \\sqrt{3} \\sin r \\implies \\frac{\\sqrt{3}}{2} = \\sqrt{3} \\sin r \\implies \\sin r = 0.5 \\implies r = 30^\\circ\\).<br>Deviation at first surface: \\(\\delta_1 = i - r = 60^\\circ - 30^\\circ = 30^\\circ\\).<br>Due to symmetry, the angle of incidence at the second surface is also \\(30^\\circ\\), and the angle of emergence is \\(60^\\circ\\).<br>Deviation at second surface: \\(\\delta_2 = e - r = 60^\\circ - 30^\\circ = 30^\\circ\\).<br>Both deviations are in the same direction (clockwise or counter-clockwise), so total deviation is:<br>\\(\\delta = \\delta_1 + \\delta_2 = 30^\\circ + 30^\\circ = 60^\\circ\\).",
+                svg: `
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                    <circle cx="110" cy="60" r="40" fill="none" stroke="#fff" stroke-width="1.5"/>
+                    <!-- Incident ray -->
+                    <line x1="40" y1="20" x2="80" y2="40" stroke="#ef4444" stroke-width="1.5"/>
+                    <!-- Refracted ray -->
+                    <line x1="80" y1="40" x2="135" y2="85" stroke="#10b981" stroke-width="1.5"/>
+                    <!-- Emergent ray -->
+                    <line x1="135" y1="85" x2="180" y2="90" stroke="#ef4444" stroke-width="1.5"/>
+                </svg>`
+            },
+            {
+                id: 10,
+                tag: "Spherical Refraction",
+                question: "A small bubble is trapped inside a glass sphere (\\(\\mu = 1.5\\)) of radius 10 cm, located 3 cm from the center. An observer looks at the bubble along the diameter line from the side closer to the bubble. At what distance from the outer surface does the bubble appear to be?",
+                options: [
+                    "6.09 cm",
+                    "7.00 cm",
+                    "5.50 cm",
+                    "6.67 cm"
+                ],
+                correctIndex: 0,
+                solution: "Using the formula for refraction at a spherical surface:<br>\\(\\frac{\\mu_2}{v} - \\frac{\\mu_1}{u} = \\frac{\\mu_2 - \\mu_1}{R}\\).<br>Here, the bubble is inside the glass, so \\(\\mu_1 = 1.5\\). The observer is in air, so \\(\\mu_2 = 1.0\\).<br>The bubble is 3 cm from the center, and the radius is 10 cm, so the object distance from the boundary is \\(u = -(10 - 3) = -7\\text{ cm}\\).<br>The radius of curvature of the boundary is concave towards the object, so \\(R = -10\\text{ cm}\\).<br>\\(\\frac{1.0}{v} - \\frac{1.5}{-7} = \\frac{1.0 - 1.5}{-10}\\)<br>\\(\\frac{1}{v} + \\frac{1.5}{7} = \\frac{0.5}{10} = \\frac{1}{20}\\)<br>\\(\\frac{1}{v} = \\frac{1}{20} - \\frac{3}{14} = \\frac{7 - 30}{140} = -\\frac{23}{140} \\implies v = -\\frac{140}{23} \\approx -6.09\\text{ cm}\\).<br>The negative sign shows it is virtual, appearing 6.09 cm from the surface.",
+                svg: null
+            },
+            {
+                id: 11,
+                tag: "Critical Angle (Curved Interface)",
+                question: "A point source of light is placed at the center of the flat circular base of a solid glass hemisphere of refractive index 1.5. What fraction of the total light emitted upwards escapes through the curved surface of the hemisphere?",
+                options: [
+                    "100%",
+                    "50%",
+                    "75%",
+                    "0%"
+                ],
+                correctIndex: 0,
+                solution: "Because the source is located exactly at the center of curvature of the hemisphere, all rays traveling upwards strike the curved surface normally (angle of incidence \\(i = 0^\\circ\\) at the glass-air boundary).<br>Since the angle of incidence is less than the critical angle at every point on the curved surface, no rays undergo total internal reflection. Thus, 100% of the light emitted upwards escapes.",
+                svg: `
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                    <path d="M 60 90 A 50 50 0 0 1 160 90 Z" fill="none" stroke="#fff" stroke-width="1.5"/>
+                    <line x1="50" y1="90" x2="170" y2="90" stroke="#fff" stroke-width="1.5"/>
+                    <circle cx="110" cy="90" r="3" fill="#ef4444"/>
+                    <!-- Rays normal to boundary -->
+                    <line x1="110" y1="90" x2="75" y2="55" stroke="#10b981" stroke-width="1"/>
+                    <line x1="110" y1="90" x2="110" y2="40" stroke="#10b981" stroke-width="1"/>
+                    <line x1="110" y1="90" x2="145" y2="55" stroke="#10b981" stroke-width="1"/>
+                </svg>`
+            },
+            {
+                id: 12,
+                tag: "Prism with Silvered Face",
+                question: "A prism of angle \\(A = 30^\\circ\\) has one of its faces silvered. A ray of light incident at an angle of \\(45^\\circ\\) on the unsilvered face retraces its path after reflecting normally from the silvered face. The refractive index of the prism material is:",
+                options: [
+                    "\\(\\sqrt{2}\\)",
+                    "\\(\\sqrt{3}\\)",
+                    "1.5",
+                    "\\(1.2\\)"
+                ],
+                correctIndex: 0,
+                solution: "For the ray to retrace its path, it must strike the silvered face normally. Therefore, \\(r_2 = 0\\).<br>In a prism, \\(r_1 + r_2 = A \\implies r_1 + 0 = 30^\\circ \\implies r_1 = 30^\\circ\\).<br>Applying Snell's Law at the first face:<br>\\(1 \\cdot \\sin i = \\mu \\sin r_1 \\implies \\sin 45^\\circ = \\mu \\sin 30^\\circ\\)<br>\\(\\frac{1}{\\sqrt{2}} = \\mu \\cdot \\frac{1}{2} \\implies \\mu = \\sqrt{2}\\).",
+                svg: `
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                    <polygon points="110,10 60,110 160,110" fill="none" stroke="#fff" stroke-width="1.5"/>
+                    <line x1="110" y1="10" x2="160" y2="110" stroke="#ef4444" stroke-width="2"/> <!-- Silvered -->
+                    <line x1="30" y1="70" x2="85" y2="60" stroke="#10b981" stroke-width="1.5"/>
+                    <line x1="85" y1="60" x2="135" y2="60" stroke="#10b981" stroke-width="1.5"/>
+                </svg>`
+            },
+            {
+                id: 13,
+                tag: "Angle of Minimum Deviation",
+                question: "A prism has a refracting angle \\(A\\) and refractive index \\(\\mu = \\cot(A/2)\\). What is the angle of minimum deviation for this prism?",
+                options: [
+                    "\\(180^\\circ - 2A\\)",
+                    "\\(180^\\circ - A\\)",
+                    "\\(90^\\circ - A\\)",
+                    "\\(2A\\)"
+                ],
+                correctIndex: 0,
+                solution: "Using the prism formula:<br>\\(\\mu = \\frac{\\sin\\left(\\frac{A + D_m}{2}\\right)}{\\sin(A/2)}\\).<br>Given \\(\\mu = \\cot(A/2) = \\frac{\\cos(A/2)}{\\sin(A/2)}\\):<br>\\(\\frac{\\cos(A/2)}{\\sin(A/2)} = \\frac{\\sin\\left(\\frac{A + D_m}{2}\\right)}{\\sin(A/2)} \\implies \\sin\\left(\\frac{A + D_m}{2}\\right) = \\cos(A/2)\\).<br>Since \\(\\cos(A/2) = \\sin(90^\\circ - A/2)\\):<br>\\(\\frac{A + D_m}{2} = 90^\\circ - A/2 \\implies A + D_m = 180^\\circ - A \\implies D_m = 180^\\circ - 2A\\).",
+                svg: null
+            },
+            {
+                id: 14,
+                tag: "Critical Angle",
+                question: "The critical angle for a light ray going from medium X to medium Y is \\(\\theta\\). If the speed of light in medium X is \\(v\\), what is the speed of light in medium Y?",
+                options: [
+                    "\\(\\frac{v}{\\sin\\theta}\\)",
+                    "\\(v \\sin\\theta\\)",
+                    "\\(\\frac{v}{\\cos\\theta}\\)",
+                    "\\(v \\cos\\theta\\)"
+                ],
+                correctIndex: 0,
+                solution: "By definition, the critical angle is given by:<br>\\(\\sin\\theta_c = \\frac{\\mu_y}{\\mu_x}\\).<br>Since refractive index is inversely proportional to velocity (\\(\\mu = c/v\\)):<br>\\(\\frac{\\mu_y}{\\mu_x} = \\frac{v_x}{v_y} \\implies \\sin\\theta = \\frac{v}{v_y} \\implies v_y = \\frac{v}{\\sin\\theta}\\).",
+                svg: null
+            },
+            {
+                id: 15,
+                tag: "Refraction & Shift",
+                question: "A point source of light is placed at the bottom of a glass block of thickness \\(d\\) and refractive index \\(\\mu\\). Light escapes from the top surface only through a circular area. What is the ratio of the diameter of this circular area to the thickness \\(d\\) of the block?",
+                options: [
+                    "\\(\\frac{2}{\\sqrt{\\mu^2 - 1}}\\)",
+                    "\\(\\frac{1}{\\sqrt{\\mu^2 - 1}}\\)",
+                    "\\(\\frac{2\\mu}{\\sqrt{\\mu^2 - 1}}\\)",
+                    "\\(\\frac{2}{\\mu}\\)"
+                ],
+                correctIndex: 0,
+                solution: "Rays escape only if the angle of incidence at the top surface is less than the critical angle \\(\\theta_c\\).<br>The radius \\(R\\) of the circle is:<br>\\(R = d \\tan\\theta_c = \\frac{d}{\\sqrt{\\mu^2 - 1}}\\).<br>The diameter is \\(D = 2R = \\frac{2d}{\\sqrt{\\mu^2 - 1}}\\).<br>Therefore, the ratio of diameter to thickness is:<br>\\(\\frac{D}{d} = \\frac{2}{\\sqrt{\\mu^2 - 1}}\\).",
+                svg: null
+            }
+        ];
+
+        let currentIndex = 0;
+        let showOptionsFlag = false;
+        let showAnswerFlag = false;
+        let showSolutionFlag = false;
+        let drawMode = false;
+
+        // Timers
+        let qTimerInterval = null;
+        let qSeconds = 0;
+        let qTimerRunning = false;
+        let calculatedPoints = 0;
+
+        // Team Scores
+        let scores = { A: 0, B: 0, C: 0, QM: 0 };
+
+        // Canvas Sketching Setup
+        const canvas = document.getElementById('blackboard');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            ctx.lineCap = 'round';
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#ef4444'; // Red sketching pen
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('DOMContentLoaded', () => {
+            loadQuestion();
+            resizeCanvas();
+        });
+
+        // Drawing Logic
+        canvas.addEventListener('mousedown', (e) => {
+            if (!drawMode) return;
+            drawing = true;
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!drawing || !drawMode) return;
+            ctx.lineTo(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener('mouseup', () => drawing = false);
+        canvas.addEventListener('mouseleave', () => drawing = false);
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (!drawMode) return;
+            drawing = true;
+            const t = e.touches[0];
+            ctx.beginPath();
+            ctx.moveTo(t.clientX - canvas.getBoundingClientRect().left, t.clientY - canvas.getBoundingClientRect().top);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (!drawing || !drawMode) return;
+            const t = e.touches[0];
+            ctx.lineTo(t.clientX - canvas.getBoundingClientRect().left, t.clientY - canvas.getBoundingClientRect().top);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener('touchend', () => drawing = false);
+
+        function toggleDrawMode() {
+            drawMode = !drawMode;
+            document.getElementById('btn-draw').classList.toggle('active', drawMode);
+            canvas.classList.toggle('active', drawMode);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        let qTimerPaused = false;
+
+        function togglePauseTimer() {
+            if (!qTimerRunning && !qTimerPaused) return;
+
+            if (qTimerRunning) {
+                clearInterval(qTimerInterval);
+                qTimerRunning = false;
+                qTimerPaused = true;
+                document.getElementById('btn-pause-timer').innerText = 'Resume';
+                document.getElementById('btn-pause-timer').classList.add('active');
+            } else {
+                qTimerRunning = true;
+                qTimerPaused = false;
+                document.getElementById('btn-pause-timer').innerText = 'Pause';
+                document.getElementById('btn-pause-timer').classList.remove('active');
+                qTimerInterval = setInterval(() => {
+                    qSeconds++;
+                    document.getElementById('timer-el').innerText = `Question Timer: ${qSeconds}s`;
+                }, 1000);
+            }
+        }
+
+        function startQuestionTimer() {
+            document.getElementById('start-overlay-el').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('start-overlay-el').style.display = 'none';
+            }, 300);
+            document.getElementById('question-content-el').classList.remove('locked-blur');
+
+            document.getElementById('btn-pause-timer').disabled = false;
+            document.getElementById('btn-stop-timer').disabled = false;
+            document.getElementById('btn-pause-timer').innerText = 'Pause';
+            document.getElementById('btn-pause-timer').classList.remove('active');
+
+            qSeconds = 0;
+            qTimerRunning = true;
+            qTimerPaused = false;
+            document.getElementById('timer-el').innerText = `Question Timer: 0s`;
+            qTimerInterval = setInterval(() => {
+                qSeconds++;
+                document.getElementById('timer-el').innerText = `Question Timer: ${qSeconds}s`;
+            }, 1000);
+        }
+
+        function stopQuestionTimer() {
+            if (qTimerRunning || qTimerPaused) {
+                clearInterval(qTimerInterval);
+                qTimerRunning = false;
+                qTimerPaused = false;
+
+                document.getElementById('btn-pause-timer').disabled = true;
+                document.getElementById('btn-stop-timer').disabled = true;
+                document.getElementById('btn-pause-timer').innerText = 'Pause';
+                document.getElementById('btn-pause-timer').classList.remove('active');
+
+                if (qSeconds <= 30) {
+                    calculatedPoints = 5;
+                } else if (qSeconds <= 60) {
+                    calculatedPoints = 4;
+                } else if (qSeconds <= 120) {
+                    calculatedPoints = 3;
+                } else if (qSeconds <= 180) {
+                    calculatedPoints = 2;
+                } else {
+                    calculatedPoints = 1;
+                }
+
+                document.getElementById('award-banner-el').innerText = `Solved in ${qSeconds}s → Worth ${calculatedPoints} Points!`;
+                document.getElementById('award-panel-el').style.display = 'flex';
+            }
+        }
+
+        function awardPointsTo(team) {
+            adjustScore(team, calculatedPoints);
+            document.getElementById('award-panel-el').style.display = 'none';
+        }
+
+        function loadQuestion() {
+            clearCanvas();
+            clearInterval(qTimerInterval);
+            qTimerRunning = false;
+            qTimerPaused = false;
+            qSeconds = 0;
+            calculatedPoints = 0;
+            document.getElementById('timer-el').innerText = `Question Timer: 0s`;
+            document.getElementById('award-panel-el').style.display = 'none';
+
+            document.getElementById('btn-pause-timer').disabled = true;
+            document.getElementById('btn-stop-timer').disabled = true;
+            document.getElementById('btn-pause-timer').innerText = 'Pause';
+            document.getElementById('btn-pause-timer').classList.remove('active');
+
+            document.getElementById('start-overlay-el').style.display = 'flex';
+            document.getElementById('start-overlay-el').style.opacity = '1';
+            document.getElementById('question-content-el').classList.add('locked-blur');
+
+            const q = quizData[currentIndex];
+            
+            document.getElementById('question-index-lbl').innerHTML = `
+                Question ${currentIndex + 1} of ${quizData.length} &bull; 
+                <span id="timer-el" style="color:var(--accent-primary); font-weight:700; margin-right:1rem;">Question Timer: 0s</span>
+                <button class="btn" id="btn-pause-timer" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; display: inline-flex; margin-right: 0.5rem;" onclick="togglePauseTimer()" disabled>Pause</button>
+                <button class="btn" id="btn-stop-timer" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; display: inline-flex;" onclick="stopQuestionTimer()" disabled>Stop</button>
+            `;
+            document.getElementById('q-tag-el').innerText = q.tag;
+            document.getElementById('q-title-el').innerHTML = q.question;
+
+            const svgWrap = document.getElementById('q-svg-wrap');
+            if (q.svg) {
+                svgWrap.innerHTML = q.svg;
+                svgWrap.style.display = 'flex';
+            } else {
+                svgWrap.style.display = 'none';
+            }
+
+            const optionsList = document.getElementById('options-list-el');
+            optionsList.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const card = document.createElement('div');
+                card.className = 'opt-card';
+                card.id = `opt-${idx}`;
+                card.innerHTML = `
+                    <span class="opt-letter">${String.fromCharCode(65 + idx)}</span>
+                    <span>${opt}</span>
+                `;
+                card.onclick = () => {
+                    stopQuestionTimer();
+                    highlightOption(idx);
+                };
+                optionsList.appendChild(card);
+            });
+
+            document.getElementById('solution-text-el').innerHTML = q.solution;
+
+            applyDisplayStates();
+            
+            if (window.renderMathInElement) {
+                renderMathInElement(document.querySelector('.board-container'));
+            }
+        }
+
+        function applyDisplayStates() {
+            document.getElementById('options-list-el').style.display = showOptionsFlag ? 'flex' : 'none';
+            document.getElementById('solution-panel-el').style.display = showSolutionFlag ? 'block' : 'none';
+            
+            document.getElementById('btn-options').classList.toggle('active', showOptionsFlag);
+            document.getElementById('btn-answer').classList.toggle('active', showAnswerFlag);
+            document.getElementById('btn-solution').classList.toggle('active', showSolutionFlag);
+
+            const q = quizData[currentIndex];
+            if (showAnswerFlag) {
+                const optEl = document.getElementById(`opt-${q.correctIndex}`);
+                if (optEl) optEl.classList.add('correct');
+            } else {
+                document.querySelectorAll('.opt-card').forEach(el => el.classList.remove('correct'));
+            }
+        }
+
+        function toggleOptions() {
+            showOptionsFlag = !showOptionsFlag;
+            applyDisplayStates();
+        }
+
+        // Show/reveal answer Directly
+        function toggleAnswer() {
+            showAnswerFlag = !showAnswerFlag;
+            if (showAnswerFlag) {
+                showOptionsFlag = true;
+                stopQuestionTimer();
+            }
+            applyDisplayStates();
+        }
+
+        function toggleSolution() {
+            showSolutionFlag = !showSolutionFlag;
+            applyDisplayStates();
+        }
+
+        function highlightOption(idx) {
+            document.querySelectorAll('.opt-card').forEach(el => el.classList.remove('correct'));
+            document.getElementById(`opt-${idx}`).classList.add('correct');
+        }
+
+        function nextQuestion() {
+            if (currentIndex < quizData.length - 1) {
+                currentIndex++;
+                resetFlags();
+                loadQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                resetFlags();
+                loadQuestion();
+            }
+        }
+
+        function resetFlags() {
+            showOptionsFlag = false;
+            showAnswerFlag = false;
+            showSolutionFlag = false;
+        }
+
+        function adjustScore(team, amt) {
+            scores[team] += amt;
+            document.getElementById(`score-${team}`).innerText = scores[team];
+        }
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                nextQuestion();
+            } else if (e.key === 'ArrowLeft') {
+                prevQuestion();
+            } else if (e.key.toLowerCase() === 'o') {
+                toggleOptions();
+            } else if (e.key.toLowerCase() === 'a') {
+                toggleAnswer();
+            } else if (e.key.toLowerCase() === 's') {
+                toggleSolution();
+            } else if (e.key.toLowerCase() === 'd') {
+                toggleDrawMode();
+            }
+        });
+    </script>
+</body>
+</html>
