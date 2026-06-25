@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lens Quiz</title>
+
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body);"></script>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #060713;
+            --surface: #101226;
+            --border: rgba(255, 255, 255, 0.12);
+            --accent-primary: #6366f1;
+            --accent-success: #10b981;
+            --accent-error: #ef4444;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Presentation Workspace Grid */
+        .workspace {
+            flex: 1;
+            display: none;
+            grid-template-rows: auto minmax(0, 1fr) auto;
+            height: 100vh;
+            position: relative;
+        }
+
+        .workspace.active {
+            display: grid !important;
+        }
+
+        /* Top control bar */
+        header {
+            background: var(--surface);
+            border-bottom: 2px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .header-left h1 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #6366f1, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-left p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .presenter-controls {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-primary);
+        }
+
+        .btn.active {
+            background: var(--accent-primary) !important;
+            color: white !important;
+            border-color: var(--accent-primary) !important;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn.danger-btn.active {
+            background: var(--accent-error) !important;
+            border-color: var(--accent-error) !important;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Central Display Board */
+        .board-container {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+            padding: 2rem;
+            align-items: stretch;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .left-board {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background: rgba(16, 18, 38, 0.4);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Blur state when question is locked */
+        .locked-blur {
+            filter: blur(15px);
+            pointer-events: none;
+            transition: filter 0.3s ease;
+        }
+
+        /* Start Overlay */
+        .start-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(6, 7, 19, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 8;
+            transition: opacity 0.3s ease;
+        }
+
+        .start-circle-btn {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), #4f46e5);
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 30px var(--accent-primary-glow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .start-circle-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 45px rgba(99, 102, 241, 0.6);
+            border-color: #fff;
+        }
+
+        .q-tag {
+            font-size: 1rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            padding: 0.4rem 1.2rem;
+            border-radius: 9999px;
+            width: fit-content;
+            font-weight: 700;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .q-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1.4;
+            color: #fff;
+        }
+
+        .svg-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .right-board {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .opt-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            font-size: 1.4rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .opt-card:hover {
+            border-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .opt-card.correct {
+            background: rgba(16, 185, 129, 0.12) !important;
+            border-color: var(--accent-success) !important;
+            color: #10b981;
+        }
+
+        .opt-letter {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.8rem;
+            color: var(--accent-primary);
+            margin-right: 1.5rem;
+            background: rgba(99, 102, 241, 0.1);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+
+        /* Points Banner & Award Panel */
+        .award-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .award-banner {
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--accent-success);
+        }
+
+        .award-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+        }
+
+        .award-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 0.6rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .award-btn:hover {
+            border-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .solution-panel {
+            background: rgba(16, 185, 129, 0.05);
+            border: 2px solid rgba(16, 185, 129, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            font-size: 1.25rem;
+            line-height: 1.6;
+            color: #d1d5db;
+        }
+
+        .solution-panel h3 {
+            color: var(--accent-success);
+            font-size: 1.4rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Blackboard Annotation Canvas Overlay */
+        .blackboard-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .blackboard-canvas.active {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+
+        /* Bottom Scoreboard & Navigation footer */
+        footer {
+            background: var(--surface);
+            border-top: 2px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .nav-section {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .scoreboard {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .score-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 0.4rem 1rem;
+            border-radius: 12px;
+        }
+
+        .score-box .team-lbl {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .score-box .score-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .score-adjust {
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-adjust:hover {
+            background: var(--accent-primary);
+        }
+
+        /* SVG modifications for large display */
+        svg {
+            transform: scale(1.3);
+            transform-origin: center;
+        }
+
+        /* Landing Screen Styles */
+        .landing-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--bg-dark);
+            padding: 2rem;
+            z-index: 100;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .landing-container {
+            background: rgba(16, 18, 38, 0.4);
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .landing-title {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #6366f1, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .landing-subtitle {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .quiz-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 18px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.25);
+        }
+
+        .quiz-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quiz-card.disabled:hover {
+            transform: none;
+            border-color: var(--border);
+            box-shadow: none;
+        }
+
+        .quiz-card-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .quiz-card-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .quiz-card-badge {
+            align-self: flex-start;
+            font-size: 0.75rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .quiz-card.disabled .quiz-card-badge {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border-color: var(--border);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Welcome / Quiz Selection Screen -->
+    <div class="landing-screen" id="landing-screen">
+        <div class="landing-container">
+            <h1 class="landing-title">Welcome to Quiz World</h1>
+
+            <!-- Intro Video -->
+            <div class="intro-video-container"
+                style="max-width: 500px; width: 100%; margin: 0.5rem auto; border-radius: 16px; overflow: hidden; border: 2px solid var(--border); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);">
+                <video src="it_must_have_a_nice_image_of_a.mp4" controls autoplay muted loop
+                    style="width: 100%; display: block;"></video>
+            </div>
+
+            <p class="landing-subtitle">Select Quiz</p>
+
+            <div class="quiz-grid">
+                <!-- Optics - Lens Card -->
+                <div class="quiz-card" onclick="selectQuiz('optics')">
+                    <span class="quiz-card-badge">Physics</span>
+                    <h2 class="quiz-card-title">Optics - Lens</h2>
+                    <p class="quiz-card-desc">Practice 15 competition-level questions on lenses, mirrors, combinations,
+                        and ray systems.</p>
+                </div>
+
+                <!-- Placeholder Cards for Rich Aesthetics -->
+                <div class="quiz-card disabled">
+                    <span class="quiz-card-badge">Physics</span>
+                    <h2 class="quiz-card-title">Electricity</h2>
+                    <p class="quiz-card-desc">Test your understanding of circuits, electrostatics, magnetic fields, and
+                        induction. (Coming Soon)</p>
+                </div>
+
+                <div class="quiz-card disabled">
+                    <span class="quiz-card-badge">Chemistry</span>
+                    <h2 class="quiz-card-title">Organic Chemistry</h2>
+                    <p class="quiz-card-desc">Practice nomenclature, reactions, mechanisms, and stereochemistry. (Coming
+                        Soon)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="workspace">
+        <header>
+            <div class="header-left">
+                <h1 id="presentation-title">Lens Quiz</h1>
+                <p id="question-index-lbl">
+                    Question 1 of 15 &bull;
+                    <span id="timer-el"
+                        style="color:var(--accent-primary); font-weight:700; margin-right:1rem;">Question Timer:
+                        0s</span>
+                    <button class="btn" id="btn-pause-timer"
+                        style="padding: 0.3rem 0.8rem; font-size: 0.8rem; display: inline-flex; margin-right: 0.5rem;"
+                        onclick="togglePauseTimer()" disabled>Pause</button>
+                    <button class="btn" id="btn-stop-timer"
+                        style="padding: 0.3rem 0.8rem; font-size: 0.8rem; display: inline-flex;"
+                        onclick="stopQuestionTimer()" disabled>Stop</button>
+                </p>
+            </div>
+
+            <div class="presenter-controls">
+                <button class="btn" id="btn-options" onclick="toggleOptions()">Toggle Options (O)</button>
+                <button class="btn" id="btn-answer" onclick="toggleAnswer()">Show Answer (A)</button>
+                <button class="btn" id="btn-solution" onclick="toggleSolution()">Show Solution (S)</button>
+                <button class="btn danger-btn" id="btn-draw" onclick="toggleDrawMode()">Draw Mode (D)</button>
+                <button class="btn" onclick="clearCanvas()">Clear Board</button>
+            </div>
+        </header>
+
+        <main class="board-container">
+            <!-- Canvas Overlay for Sketching -->
+            <canvas class="blackboard-canvas" id="blackboard"></canvas>
+
+            <div class="left-board" id="left-board-el">
+                <!-- Circular Start Button Overlay -->
+                <div class="start-overlay" id="start-overlay-el">
+                    <button class="start-circle-btn" onclick="startQuestionTimer()">START</button>
+                </div>
+
+                <div class="locked-blur" id="question-content-el">
+                    <div class="q-tag" id="q-tag-el">Lens & Mirror</div>
+                    <div class="q-title" id="q-title-el">
+                        Loading question...
+                    </div>
+                    <div class="svg-wrap" id="q-svg-wrap" style="display: none;">
+                        <!-- SVG gets injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-board">
+                <!-- MCQ Options (Default: Hidden or shown based on Toggle Options) -->
+                <div class="options-list" id="options-list-el" style="display: none;">
+                    <!-- Option cards -->
+                </div>
+
+                <!-- Score Awarding Panel (Appears after answer is selected) -->
+                <div class="award-panel" id="award-panel-el">
+                    <div class="award-banner" id="award-banner-el">Time: 24s &rarr; Worth 5 Points!</div>
+                    <div class="award-buttons">
+                        <button class="award-btn" onclick="awardPointsTo('A')">Award Team A</button>
+                        <button class="award-btn" onclick="awardPointsTo('B')">Award Team B</button>
+                        <button class="award-btn" onclick="awardPointsTo('C')">Award Team C</button>
+                        <button class="award-btn" onclick="awardPointsTo('QM')"
+                            style="border-color:var(--accent-error); color:#fca5a5;">Award QM</button>
+                    </div>
+                </div>
+
+                <!-- Solution Card (Default: Hidden) -->
+                <div class="solution-panel" id="solution-panel-el" style="display: none;">
+                    <h3>Step-by-step Solution</h3>
+                    <div id="solution-text-el">Solution...</div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="nav-section">
+                <button class="btn" onclick="location.href='index.html'">Home 🏠</button>
+                <button class="btn" onclick="prevQuestion()">&larr; Previous</button>
+                <button class="btn" onclick="nextQuestion()">Next &rarr;</button>
+                <button class="btn"
+                    style="background: linear-gradient(135deg, #a5b4fc, #6366f1); border-color: var(--accent-primary); color: white; margin-left: 0.5rem;"
+                    onclick="openMessagePopup()">Special Message ✉️</button>
+            </div>
+
+            <div class="scoreboard">
+                <span style="font-weight: 700; color: var(--text-muted);">SCOREBOARD:</span>
+                <div class="score-box">
+                    <span class="team-lbl" style="color: #ef4444;">Team A</span>
+                    <button class="score-adjust" onclick="adjustScore('A', -1)">-</button>
+                    <span class="score-val" id="score-A">0</span>
+                    <button class="score-adjust" onclick="adjustScore('A', 1)">+</button>
+                </div>
+                <div class="score-box">
+                    <span class="team-lbl" style="color: #6366f1;">Team B</span>
+                    <button class="score-adjust" onclick="adjustScore('B', -1)">-</button>
+                    <span class="score-val" id="score-B">0</span>
+                    <button class="score-adjust" onclick="adjustScore('B', 1)">+</button>
+                </div>
+                <div class="score-box">
+                    <span class="team-lbl" style="color: #10b981;">Team C</span>
+                    <button class="score-adjust" onclick="adjustScore('C', -1)">-</button>
+                    <span class="score-val" id="score-C">0</span>
+                    <button class="score-adjust" onclick="adjustScore('C', 1)">+</button>
+                </div>
+                <div class="score-box" style="border-color: var(--accent-error);">
+                    <span class="team-lbl" style="color: #ef4444; font-weight:800;">Quizmaster</span>
+                    <button class="score-adjust" onclick="adjustScore('QM', -1)">-</button>
+                    <span class="score-val" id="score-QM" style="color: var(--accent-error);">0</span>
+                    <button class="score-adjust" onclick="adjustScore('QM', 1)">+</button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                id: 1,
+                tag: "Silvered Lenses",
+                question: "A plano-convex lens \\((f = 20\\text{ cm})\\) is silvered at its plane surface. Now its focal length will be:",
+                options: [
+                    "20 cm",
+                    "40 cm",
+                    "30 cm",
+                    "10 cm"
+                ],
+                correctIndex: 3,
+                solution: "Using the formula for a silvered lens:<br>\\(\\frac{1}{F} = \\frac{2}{f_L} + \\frac{1}{f_M}\\)<br>For a plane mirror, \\(f_M = \\infty \\implies \\frac{1}{f_M} = 0\\).<br>\\(\\frac{1}{F} = \\frac{2}{20} + 0 = \\frac{1}{10} \\implies F = 10\\text{ cm}\\).",
+                svg: null
+            },
+            {
+                id: 2,
+                tag: "Lens Maker's Formula",
+                question: "The focal length of a convex lens of refractive index 1.5 is \\(f\\) when it is placed in air. When it is immersed in a liquid it behaves as a converging lens of focal length \\(xf\\) \\((x > 1)\\). The refractive index of the liquid is:",
+                options: [
+                    "Greater than 3/2",
+                    "Greater than 1 and Less than 3/2",
+                    "Less than 3/2",
+                    "All of these"
+                ],
+                correctIndex: 1,
+                solution: "Using the Lens Maker's formula:<br>\\(\\frac{f_m}{f_a} = \\frac{\\mu_g - 1}{\\frac{\\mu_g}{\\mu_m} - 1}\\)<br>For the focal length to increase \\((x > 1)\\) but still remain a converging lens, the surrounding medium must have a refractive index \\(\\mu_m\\) greater than 1 (air) but less than that of the glass \\(\\mu_g = 1.5\\) (i.e. \\(1 < \\mu_m < 1.5\\)).",
+                svg: null
+            },
+            {
+                id: 3,
+                tag: "Graph Relations",
+                question: "For a given convex lens, the graph between \\(\\frac{1}{u}\\) and \\(\\frac{1}{v}\\) for real objects \\((u < 0)\\) and virtual images \\((v > 0)\\) is represented by:",
+                options: [
+                    "q3_option_a.png",
+                    "q3_option_b.png",
+                    "q3_option_c.png",
+                    "q3_option_d.png"
+                ],
+                correctIndex: 3,
+                solution: "From the lens formula:<br>\\(\\frac{1}{v} - \\frac{1}{u} = \\frac{1}{f} \\implies \\frac{1}{v} = \\frac{1}{u} + \\frac{1}{f}\\)<br>Comparing this with the linear equation \\(y = mx + c\\):<br>Here, \\(y = \\frac{1}{v}\\), \\(x = \\frac{1}{u}\\), slope \\(m = +1\\), and y-intercept \\(c = \\frac{1}{f}\\).<br>Thus, it is a straight line with a slope of \\(45^\\circ\\) and a positive intercept of \\(\\frac{1}{f}\\). Since the object is real \\((u < 0 \\implies 1/u < 0)\\) and image is virtual \\((v > 0 \\implies 1/v > 0)\\), the graph is a straight line in the second quadrant.",
+                svg: null
+            },
+            {
+                id: 4,
+                tag: "Lens Maker's",
+                question: "Arrange the following glass convex lenses in increasing order of their focal lengths:<br>a) \\(R_1 = 12\\text{ cm}, R_2 = 6\\text{ cm}\\)<br>b) \\(R_1 = 10\\text{ cm}, R_2 = 5\\text{ cm}\\)<br>c) \\(R_1 = 15\\text{ cm}, R_2 = 5\\text{ cm}\\)<br>d) \\(R_1 = 15\\text{ cm}, R_2 = 10\\text{ cm}\\)",
+                options: [
+                    "a, b, c, d",
+                    "a, c, b, d",
+                    "b, c, a, d",
+                    "d, c, b, a"
+                ],
+                correctIndex: 2,
+                solution: "Using the Lens Maker's formula \\(\\frac{1}{f} = (\\mu-1)\\left(\\frac{1}{R_1} + \\frac{1}{R_2}\\right) = c \\left(\\frac{1}{R_1} + \\frac{1}{R_2}\\right)\\):<br>- For (a): \\(\\frac{1}{f_a} = c\\left(\\frac{1}{12} + \\frac{1}{6}\\right) = c\\frac{3}{12} = \\frac{c}{4} \\implies f_a = 4/c\\)<br>- For (b): \\(\\frac{1}{f_b} = c\\left(\\frac{1}{10} + \\frac{1}{5}\\right) = c\\frac{3}{10} = \\frac{3c}{10} \\implies f_b = 3.33/c\\)<br>- For (c): \\(\\frac{1}{f_c} = c\\left(\\frac{1}{15} + \\frac{1}{5}\\right) = c\\frac{4}{15} = \\frac{4c}{15} \\implies f_c = 3.75/c\\)<br>- For (d): \\(\\frac{1}{f_d} = c\\left(\\frac{1}{15} + \\frac{1}{10}\\right) = c\\frac{25}{150} = \\frac{c}{6} \\implies f_d = 6/c\\)<br>Comparing focal lengths: \\(f_b < f_c < f_a < f_d\\).",
+                svg: null
+            },
+            {
+                id: 5,
+                tag: "Convex Mirror",
+                question: "An object is placed at a distance of 20 cm from a convex mirror of focal length 10 cm. The image formed by the mirror is:",
+                options: [
+                    "Real and at 20 cm from the mirror",
+                    "Virtual and at 20 cm from the mirror",
+                    "Virtual and at 20/3 cm from the mirror",
+                    "Real and at 20/3 cm from the mirror"
+                ],
+                correctIndex: 2,
+                solution: "For a convex mirror, \\(u = -20\\text{ cm}, f = +10\\text{ cm}\\).<br>Using the mirror formula:<br>\\(\\frac{1}{v} + \\frac{1}{u} = \\frac{1}{f} \\implies \\frac{1}{v} + \\frac{1}{-20} = \\frac{1}{10}\\)<br>\\(\\frac{1}{v} = \\frac{1}{10} + \\frac{1}{20} = \\frac{3}{20} \\implies v = +\\frac{20}{3}\\text{ cm}\\).<br>Since \\(v > 0\\), the image is virtual, formed behind the mirror at 20/3 cm.",
+                svg: null
+            },
+            {
+                id: 6,
+                tag: "Newton's Formula",
+                question: "With a concave lens, an object is placed at a distance \\(x_1\\) from the principal focus on the principal axis. The image is formed at a distance \\(x_2\\) from the principal focus. The focal length of the lens is:",
+                options: [
+                    "\\(x_1 x_2\\)",
+                    "\\(\\frac{x_1 + x_2}{2}\\)",
+                    "\\(\\sqrt{x_1/x_2}\\)",
+                    "\\(\\sqrt{x_1 x_2}\\)"
+                ],
+                correctIndex: 3,
+                solution: "This is Newton's formula for lenses, which states that if the distances of the object and image from their respective focal points are \\(x_1\\) and \\(x_2\\), then:<br>\\(f^2 = x_1 x_2 \\implies f = \\sqrt{x_1 x_2}\\).",
+                svg: null
+            },
+            {
+                id: 7,
+                tag: "Cut & Combination",
+                question: "A thin equiconvex lens \\((\\mu = 3/2)\\) of focal length 10 cm is cut and separated, and a material of refractive index 3 is filled between them. What is the focal length of the combination?",
+                options: [
+                    "-10 cm",
+                    "-10/4 cm",
+                    "-10/3 cm",
+                    "None of these"
+                ],
+                correctIndex: 2,
+                solution: "For the original lens: \\(\\frac{1}{f} = (1.5-1)\\frac{2}{R} \\implies \\frac{1}{10} = \\frac{1}{R} \\implies R = 10\\text{ cm}\\).<br>When cut, we have two plano-convex lenses of focal length \\(2f = 20\\text{ cm}\\) each.<br>The index-3 material behaves as a double-concave lens in between, with \\(R_1 = -10\\text{ cm}\\) and \\(R_2 = +10\\text{ cm}\\).<br>Power of this intermediate liquid lens:<br>\\(\\frac{1}{f'} = (3-1)\\left(-\\frac{1}{10} - \\frac{1}{10}\\right) = 2 \\times \\left(-\\frac{2}{10}\\right) = -\\frac{4}{10}\\text{ cm}^{-1}\\).<br>Total power of combination:<br>\\(\\frac{1}{f_{\\text{eq}}} = \\frac{1}{20} + \\frac{1}{20} - \\frac{4}{10} = \\frac{1}{10} - \\frac{4}{10} = -\\frac{3}{10} \\implies f_{\\text{eq}} = -\\frac{10}{3}\\text{ cm}\\).",
+                svg: `
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                    <!-- Left plano-convex -->
+                    <path d="M 40 10 Q 70 60 40 110 L 40 10 Z" fill="#4f46e5" opacity="0.8"/>
+                    <!-- Liquid concave lens -->
+                    <path d="M 60 10 Q 90 60 60 110 L 100 110 Q 70 60 100 10 Z" fill="#10b981" opacity="0.4"/>
+                    <!-- Right plano-convex -->
+                    <path d="M 120 10 L 120 110 Q 150 60 120 10 Z" fill="#4f46e5" opacity="0.8"/>
+                    <text x="35" y="118" fill="#fff" font-size="10">f=20</text>
+                    <text x="75" y="118" fill="#10b981" font-size="10">liquid (μ=3)</text>
+                    <text x="115" y="118" fill="#fff" font-size="10">f=20</text>
+                </svg>`
+            },
+            {
+                id: 8,
+                tag: "Combinations",
+                question: "You are given two identical plano-convex lenses. When you place an object 20 cm to the left of a single plano-convex lens, the image appears 40 cm to the right. You then arrange the two lenses back to back. If the object is 20 cm to the left of this new lens, where is the image?",
+                options: [
+                    "10 cm to the right of the lens",
+                    "20 cm to the right of the lens",
+                    "80 cm to the right of the lens",
+                    "80 cm to the left of the lens"
+                ],
+                correctIndex: 0,
+                solution: "For one plano-convex lens:<br>\\(\\frac{1}{f} = \\frac{1}{40} - \\frac{1}{-20} = \\frac{3}{40} \\implies f = \\frac{40}{3}\\text{ cm}\\).<br>Combined back-to-back lens:<br>\\(\\frac{1}{f_{\\text{eq}}} = \\frac{1}{f} + \\frac{1}{f} = \\frac{6}{40} = \\frac{3}{20} \\implies f_{\\text{eq}} = \\frac{20}{3}\\text{ cm}\\).<br>Applying lens equation with \\(u = -20\\text{ cm}\\):<br>\\(\\frac{1}{v} - \\frac{1}{-20} = \\frac{3}{20} \\implies \\frac{1}{v} = \\frac{3}{20} - \\frac{1}{20} = \\frac{2}{20} = \\frac{1}{10}\\)<br>\\(v = 10\\text{ cm}\\) to the right.",
+                svg: null
+            },
+            {
+                id: 9,
+                tag: "Medium Shift",
+                question: "The power of a lens having refractive index 1.25 is +3 diopters in air. When placed in a liquid, its power is -2 diopters. The refractive index of the liquid is:",
+                options: [
+                    "1.2",
+                    "1.4",
+                    "1.5",
+                    "1.6"
+                ],
+                correctIndex: 2,
+                solution: "Power in air: \\(3 = (1.25 - 1) K = 0.25 K \\implies K = 12\\).<br>Power in liquid: \\(-2 = \\left(\\frac{1.25}{\\mu_l} - 1\\right) K\\)<br>\\(-2 = \\left(\\frac{1.25}{\\mu_l} - 1\\right) 12 \\implies \\frac{1.25}{\\mu_l} - 1 = -\\frac{2}{12} = -\\frac{1}{6}\\)<br>\\(\\frac{1.25}{\\mu_l} = 1 - \\frac{1}{6} = \\frac{5}{6} \\implies \\mu_l = 1.25 \\times \\frac{6}{5} = 1.5\\).",
+                svg: null
+            },
+            {
+                id: 10,
+                tag: "Oscillating Lens",
+                question: "Monochromatic light rays parallel to the x-axis strike a convex lens \\(AB\\). If the lens oscillates such that \\(AB\\) tilts up to a small angle \\(\\theta\\) (in radians) on either side of the y-axis, then the amplitude of oscillation of the image along the axis will be:",
+                options: [
+                    "\\(f \\sec \\theta\\)",
+                    "\\(f \\sec^2 \\theta\\)",
+                    "\\(\\frac{f\\theta^2}{2}\\)",
+                    "\\(\\frac{f\\theta^2}{4}\\)"
+                ],
+                correctIndex: 3,
+                solution: "When tilted by angle \\(\\theta\\), the image distance shifts along the axis to \\(v = f \\sec \\theta \\approx f\\left(1 + \\frac{\\theta^2}{2}\\right)\\).<br>The peak-to-peak range of oscillation is \\(\\Delta x = f \\sec\\theta - f \\approx \\frac{f\\theta^2}{2}\\).<br>The amplitude of this oscillation is half of the total range:<br>\\(A = \\frac{\\Delta x}{2} = \\frac{f\\theta^2}{4}\\).",
+                svg: `
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                    <line x1="10" y1="60" x2="200" y2="60" stroke="#9ca3af" stroke-dasharray="4" stroke-width="1.5"/>
+                    <g transform="rotate(12, 100, 60)">
+                        <path d="M 95 20 Q 105 60 95 100 Q 85 60 95 20 Z" fill="#4f46e5" stroke="#a5b4fc" stroke-width="1.5"/>
+                        <line x1="95" y1="10" x2="95" y2="110" stroke="#ef4444" stroke-width="1"/>
+                    </g>
+                    <!-- Rays -->
+                    <path d="M 10 30 L 92 30" stroke="#6366f1" stroke-width="1.5" />
+                    <path d="M 10 90 L 92 90" stroke="#6366f1" stroke-width="1.5" />
+                    <text x="130" y="50" fill="#fff" font-size="10">Tilt angle θ</text>
+                </svg>`
+            },
+            {
+                id: 11,
+                tag: "Combinations",
+                question: "A convex lens of focal length 40 cm is in contact with a concave lens of focal length 25 cm. The power of the combination is:",
+                options: [
+                    "-6.5 D",
+                    "+6.5 D",
+                    "+6.67 D",
+                    "-1.5 D"
+                ],
+                correctIndex: 3,
+                solution: "Focal length of convex lens: \\(f_1 = +40\\text{ cm} = +0.4\\text{ m} \\implies P_1 = +2.5\\text{ D}\\).<br>Focal length of concave lens: \\(f_2 = -25\\text{ cm} = -0.25\\text{ m} \\implies P_2 = -4.0\\text{ D}\\).<br>Combined power: \\(P_{\\text{eq}} = P_1 + P_2 = 2.5 - 4.0 = -1.5\\text{ D}\\).",
+                svg: null
+            },
+            {
+                id: 12,
+                tag: "Medium Shift",
+                question: "The focal length of a convex lens in air is 16 cm (\\(\\mu_g = 1.5\\)). When submerged in a liquid of refractive index 1.42, what is the closest value for the ratio of the focal length in the medium to the focal length in air?",
+                options: [
+                    "9",
+                    "17",
+                    "1",
+                    "5"
+                ],
+                correctIndex: 0,
+                solution: "Using the ratio relation:<br>\\(\\frac{f_m}{f_a} = \\frac{1.5 - 1}{\\frac{1.5}{1.42} - 1} = \\frac{0.5}{1.0563 - 1} = \\frac{0.5}{0.0563} \\approx 8.875\\).<br>The closest integer value is 9.",
+                svg: null
+            },
+            {
+                id: 13,
+                tag: "Combinations",
+                question: "Two identical plano-convex lenses are combined together in three different orientations: (1) curved faces outward, (2) curved faces nesting in the same direction, (3) flat faces outward with curved faces touching. The ratio of focal lengths in these three cases is:",
+                options: [
+                    "2 : 1 : 1",
+                    "1 : 2 : 2",
+                    "2 : 2 : 1",
+                    "1 : 1 : 1"
+                ],
+                correctIndex: 3,
+                solution: "In all three cases, the two lenses are thin and kept in contact, so the equivalent focal length is always given by:<br>\\(\\frac{1}{F} = \\frac{1}{f_1} + \\frac{1}{f_2}\\).<br>Since the parameters of the lenses do not change with rotation when in thin contact, the focal length is identical in all orientations. The ratio is 1:1:1.",
+                svg: `
+                <svg width="280" height="100" viewBox="0 0 280 100">
+                    <!-- Case 1 -->
+                    <g transform="translate(10, 0)">
+                        <path d="M 20 10 L 20 90 Q 40 50 20 10 Z" fill="#6366f1" opacity="0.7"/>
+                        <path d="M 20 10 Q 0 50 20 90 L 20 10 Z" fill="#6366f1" opacity="0.7"/>
+                        <text x="12" y="98" fill="#fff" font-size="10">(1)</text>
+                    </g>
+                    <!-- Case 2 -->
+                    <g transform="translate(90, 0)">
+                        <path d="M 20 10 L 20 90 Q 40 50 20 10 Z" fill="#6366f1" opacity="0.7"/>
+                        <path d="M 40 10 L 40 90 Q 60 50 40 10 Z" fill="#6366f1" opacity="0.7"/>
+                        <text x="25" y="98" fill="#fff" font-size="10">(2)</text>
+                    </g>
+                    <!-- Case 3 -->
+                    <g transform="translate(180, 0)">
+                        <path d="M 10 10 Q 30 50 10 90 L 10 90 Z" fill="#6366f1" opacity="0.7"/>
+                        <path d="M 30 10 Q 10 50 30 90 L 30 90 Z" fill="#6366f1" opacity="0.7"/>
+                        <text x="15" y="98" fill="#fff" font-size="10">(3)</text>
+                    </g>
+                </svg>`
+            },
+            {
+                id: 14,
+                tag: "Displacement Method",
+                question: "A convex lens of focal length \\(f\\) is placed somewhere between an object and a screen at distance \\(x\\). If the magnification produced is \\(m\\), the focal length \\(f\\) is given by:",
+                options: [
+                    "\\(\\frac{mx}{(m+1)^2}\\)",
+                    "\\(\\frac{mx}{(m-1)^2}\\)",
+                    "\\(\\frac{(m+1)^2}{m} x\\)",
+                    "\\(\\frac{(m-1)^2}{m} x\\)"
+                ],
+                correctIndex: 0,
+                solution: "Let object distance be \\(u\\) and image distance be \\(v\\).<br>We have \\(u + v = x\\) and \\(m = v/u \\implies v = mu\\).<br>Substituting \\(v\\): \\(u(m + 1) = x \\implies u = \\frac{x}{m+1}\\) and \\(v = \\frac{mx}{m+1}\\).<br>Using lens equation:<br>\\(\\frac{1}{f} = \\frac{1}{v} + \\frac{1}{u} = \\frac{m+1}{mx} + \\frac{m+1}{x} = \\frac{(m+1)^2}{mx} \\implies f = \\frac{mx}{(m+1)^2}\\).",
+                svg: null
+            },
+            {
+                id: 15,
+                tag: "Lens-Mirror System",
+                question: "A thin convex lens \\(L\\) (\\(\\mu_g = 1.5\\)) is placed on a plane mirror. An object pin at A, at a height of 18 cm, forms its inverted image coinciding with itself. When a liquid of index \\(\\mu_l\\) is introduced between the lens and mirror, the pin must be moved to height 27 cm to coincide with its image. What is the value of \\(\\mu_l\\)?",
+                options: [
+                    "1.414",
+                    "1.732",
+                    "4/3",
+                    "3/2"
+                ],
+                correctIndex: 2,
+                solution: "Case 1 (Air): Coinciding image at 18 cm means rays fall normally on the mirror, so the focal length of the glass lens is \\(f_L = 18\\text{ cm}\\).<br>\\(\\frac{1}{f_L} = (1.5-1)\\frac{2}{R} \\implies R = 18\\text{ cm}\\).<br>Case 2 (Liquid in contact): Combined focal length of system is \\(F = 27\\text{ cm}\\).<br>The liquid forms a plano-concave lens of radius \\(R = -18\\text{ cm}\\).<br>\\(\\frac{1}{F} = \\frac{1}{f_L} + \\frac{1}{f_{\\text{liquid}}} \\implies \\frac{1}{27} = \\frac{1}{18} + \\frac{1}{f_{\\text{liquid}}}\\)<br>\\(\\frac{1}{f_{\\text{liquid}}} = \\frac{1}{27} - \\frac{1}{18} = -\\frac{1}{54}\\).<br>Using Lens Maker's for liquid lens:<br>\\(\\frac{1}{f_{\\text{liquid}}} = (\\mu_l - 1)\\left(-\\frac{1}{18}\\right) \\implies -\\frac{1}{54} = -\\frac{\\mu_l - 1}{18}\\)<br>\\(\\mu_l - 1 = \\frac{18}{54} = \\frac{1}{3} \\implies \\mu_l = 1 + \\frac{1}{3} = \\frac{4}{3}\\).",
+                svg: `
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                    <!-- Pin -->
+                    <line x1="110" y1="10" x2="110" y2="40" stroke="#ef4444" stroke-width="2"/>
+                    <polygon points="110,40 107,35 113,35" fill="#ef4444"/>
+                    <text x="115" y="25" fill="#ef4444" font-size="10">Pin A</text>
+                    <!-- Convex lens -->
+                    <path d="M 70 80 Q 110 70 150 80 Q 110 90 70 80 Z" fill="#6366f1" opacity="0.8"/>
+                    <!-- Liquid layer -->
+                    <path d="M 70 80 Q 110 90 150 80 L 150 92 L 70 92 Z" fill="#10b981" opacity="0.5"/>
+                    <!-- Mirror -->
+                    <line x1="60" y1="92" x2="160" y2="92" stroke="#fff" stroke-width="2"/>
+                    <line x1="60" y1="92" x2="55" y2="97" stroke="#9ca3af" stroke-width="1"/>
+                    <line x1="80" y1="92" x2="75" y2="97" stroke="#9ca3af" stroke-width="1"/>
+                    <line x1="100" y1="92" x2="95" y2="97" stroke="#9ca3af" stroke-width="1"/>
+                    <line x1="120" y1="92" x2="115" y2="97" stroke="#9ca3af" stroke-width="1"/>
+                    <line x1="140" y1="92" x2="135" y2="97" stroke="#9ca3af" stroke-width="1"/>
+                    <line x1="160" y1="92" x2="155" y2="97" stroke="#9ca3af" stroke-width="1"/>
+                </svg>`
+            }
+        ];
+
+        let currentIndex = 0;
+        let showOptionsFlag = false;
+        let showAnswerFlag = false;
+        let showSolutionFlag = false;
+        let drawMode = false;
+
+        // Timers
+        let qTimerInterval = null;
+        let qSeconds = 0;
+        let qTimerRunning = false;
+        let calculatedPoints = 0;
+
+        // Team Scores
+        let scores = { A: 0, B: 0, C: 0, QM: 0 };
+
+        // Canvas Sketching Setup
+        const canvas = document.getElementById('blackboard');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            ctx.lineCap = 'round';
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#ef4444'; // Red sketching pen
+        }
+
+        function selectQuiz(quizId) {
+            if (quizId === 'optics') {
+                document.getElementById('landing-screen').style.display = 'none';
+                document.querySelector('.workspace').classList.add('active');
+                loadQuestion();
+                resizeCanvas();
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('DOMContentLoaded', () => {
+            selectQuiz('optics');
+        });
+
+        // Drawing Logic
+        canvas.addEventListener('mousedown', (e) => {
+            if (!drawMode) return;
+            drawing = true;
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!drawing || !drawMode) return;
+            ctx.lineTo(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener('mouseup', () => drawing = false);
+        canvas.addEventListener('mouseleave', () => drawing = false);
+
+        // Touch support for smartboards
+        canvas.addEventListener('touchstart', (e) => {
+            if (!drawMode) return;
+            drawing = true;
+            const t = e.touches[0];
+            ctx.beginPath();
+            ctx.moveTo(t.clientX - canvas.getBoundingClientRect().left, t.clientY - canvas.getBoundingClientRect().top);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (!drawing || !drawMode) return;
+            const t = e.touches[0];
+            ctx.lineTo(t.clientX - canvas.getBoundingClientRect().left, t.clientY - canvas.getBoundingClientRect().top);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener('touchend', () => drawing = false);
+
+        function toggleDrawMode() {
+            drawMode = !drawMode;
+            document.getElementById('btn-draw').classList.toggle('active', drawMode);
+            canvas.classList.toggle('active', drawMode);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Timer control
+        let qTimerPaused = false;
+
+        function togglePauseTimer() {
+            if (!qTimerRunning && !qTimerPaused) return;
+
+            if (qTimerRunning) {
+                clearInterval(qTimerInterval);
+                qTimerRunning = false;
+                qTimerPaused = true;
+                document.getElementById('btn-pause-timer').innerText = 'Resume';
+                document.getElementById('btn-pause-timer').classList.add('active');
+            } else {
+                qTimerRunning = true;
+                qTimerPaused = false;
+                document.getElementById('btn-pause-timer').innerText = 'Pause';
+                document.getElementById('btn-pause-timer').classList.remove('active');
+                qTimerInterval = setInterval(() => {
+                    qSeconds++;
+                    document.getElementById('timer-el').innerText = `Question Timer: ${qSeconds}s`;
+                }, 1000);
+            }
+        }
+
+        function startQuestionTimer() {
+            // Unblur content
+            document.getElementById('start-overlay-el').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('start-overlay-el').style.display = 'none';
+            }, 300);
+            document.getElementById('question-content-el').classList.remove('locked-blur');
+
+            // Enable controls
+            document.getElementById('btn-pause-timer').disabled = false;
+            document.getElementById('btn-stop-timer').disabled = false;
+            document.getElementById('btn-pause-timer').innerText = 'Pause';
+            document.getElementById('btn-pause-timer').classList.remove('active');
+
+            // Start clock
+            qSeconds = 0;
+            qTimerRunning = true;
+            qTimerPaused = false;
+            document.getElementById('timer-el').innerText = `Question Timer: 0s`;
+            qTimerInterval = setInterval(() => {
+                qSeconds++;
+                document.getElementById('timer-el').innerText = `Question Timer: ${qSeconds}s`;
+            }, 1000);
+        }
+
+        function stopQuestionTimer() {
+            if (qTimerRunning || qTimerPaused) {
+                clearInterval(qTimerInterval);
+                qTimerRunning = false;
+                qTimerPaused = false;
+
+                // Disable controls
+                document.getElementById('btn-pause-timer').disabled = true;
+                document.getElementById('btn-stop-timer').disabled = true;
+                document.getElementById('btn-pause-timer').innerText = 'Pause';
+                document.getElementById('btn-pause-timer').classList.remove('active');
+
+                // Calculate points
+                if (qSeconds <= 30) {
+                    calculatedPoints = 5;
+                } else if (qSeconds <= 60) {
+                    calculatedPoints = 4;
+                } else if (qSeconds <= 120) {
+                    calculatedPoints = 3;
+                } else if (qSeconds <= 180) {
+                    calculatedPoints = 2;
+                } else {
+                    calculatedPoints = 1;
+                }
+
+                // Show points panel
+                document.getElementById('award-banner-el').innerText = `Solved in ${qSeconds}s → Worth ${calculatedPoints} Points!`;
+                document.getElementById('award-panel-el').style.display = 'flex';
+            }
+        }
+
+        function awardPointsTo(team) {
+            adjustScore(team, calculatedPoints);
+            document.getElementById('award-panel-el').style.display = 'none';
+        }
+
+        // Render Question Details
+        function loadQuestion() {
+            clearCanvas();
+            clearInterval(qTimerInterval);
+            qTimerRunning = false;
+            qTimerPaused = false;
+            qSeconds = 0;
+            calculatedPoints = 0;
+            document.getElementById('timer-el').innerText = `Question Timer: 0s`;
+            document.getElementById('award-panel-el').style.display = 'none';
+
+            // Disable controls
+            document.getElementById('btn-pause-timer').disabled = true;
+            document.getElementById('btn-stop-timer').disabled = true;
+            document.getElementById('btn-pause-timer').innerText = 'Pause';
+            document.getElementById('btn-pause-timer').classList.remove('active');
+
+            // Show locked start screen
+            document.getElementById('start-overlay-el').style.display = 'flex';
+            document.getElementById('start-overlay-el').style.opacity = '1';
+            document.getElementById('question-content-el').classList.add('locked-blur');
+
+            const q = quizData[currentIndex];
+
+            // Header Info
+            document.getElementById('question-index-lbl').innerHTML = `
+                Question ${currentIndex + 1} of ${quizData.length} &bull; 
+                <span id="timer-el" style="color:var(--accent-primary); font-weight:700; margin-right:1rem;">Question Timer: 0s</span>
+                <button class="btn" id="btn-pause-timer" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; display: inline-flex; margin-right: 0.5rem;" onclick="togglePauseTimer()" disabled>Pause</button>
+                <button class="btn" id="btn-stop-timer" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; display: inline-flex;" onclick="stopQuestionTimer()" disabled>Stop</button>
+            `;
+            document.getElementById('q-tag-el').innerText = q.tag;
+            document.getElementById('q-title-el').innerHTML = q.question;
+
+            // Render SVGs
+            const svgWrap = document.getElementById('q-svg-wrap');
+            if (q.svg) {
+                svgWrap.innerHTML = q.svg;
+                svgWrap.style.display = 'flex';
+            } else {
+                svgWrap.style.display = 'none';
+            }
+
+            // Build Option Cards
+            const optionsList = document.getElementById('options-list-el');
+            optionsList.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const card = document.createElement('div');
+                card.className = 'opt-card';
+                card.id = `opt-${idx}`;
+
+                let optHtml = `<span>${opt}</span>`;
+                if (opt.endsWith('.png') || opt.endsWith('.jpg')) {
+                    optHtml = `<img src="${opt}" alt="Option ${String.fromCharCode(65 + idx)}" style="max-height: 80px; max-width: 100%; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin-left: 0.5rem; opacity: 0.9;">`;
+                }
+
+                card.innerHTML = `
+                    <span class="opt-letter">${String.fromCharCode(65 + idx)}</span>
+                    ${optHtml}
+                `;
+                card.onclick = () => {
+                    stopQuestionTimer();
+                    highlightOption(idx);
+                };
+                optionsList.appendChild(card);
+            });
+
+            // Set Solution Text
+            document.getElementById('solution-text-el').innerHTML = q.solution;
+
+            // Apply visibility flags
+            applyDisplayStates();
+
+            if (window.renderMathInElement) {
+                renderMathInElement(document.querySelector('.board-container'));
+            }
+        }
+
+        function applyDisplayStates() {
+            document.getElementById('options-list-el').style.display = showOptionsFlag ? 'flex' : 'none';
+            document.getElementById('solution-panel-el').style.display = showSolutionFlag ? 'block' : 'none';
+
+            document.getElementById('btn-options').classList.toggle('active', showOptionsFlag);
+            document.getElementById('btn-answer').classList.toggle('active', showAnswerFlag);
+            document.getElementById('btn-solution').classList.toggle('active', showSolutionFlag);
+
+            const q = quizData[currentIndex];
+            if (showAnswerFlag) {
+                const optEl = document.getElementById(`opt-${q.correctIndex}`);
+                if (optEl) optEl.classList.add('correct');
+            } else {
+                document.querySelectorAll('.opt-card').forEach(el => el.classList.remove('correct'));
+            }
+        }
+
+        function toggleOptions() {
+            showOptionsFlag = !showOptionsFlag;
+            applyDisplayStates();
+        }
+
+        function toggleAnswer() {
+            showAnswerFlag = !showAnswerFlag;
+            if (showAnswerFlag) {
+                showOptionsFlag = true; // Auto open options
+                stopQuestionTimer(); // Stop timer if teacher reveals answer directly
+            }
+            applyDisplayStates();
+        }
+
+        function toggleSolution() {
+            showSolutionFlag = !showSolutionFlag;
+            applyDisplayStates();
+        }
+
+        function highlightOption(idx) {
+            document.querySelectorAll('.opt-card').forEach(el => el.classList.remove('correct'));
+            document.getElementById(`opt-${idx}`).classList.add('correct');
+        }
+
+        // Navigation
+        function nextQuestion() {
+            if (currentIndex < quizData.length - 1) {
+                currentIndex++;
+                resetFlags();
+                loadQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                resetFlags();
+                loadQuestion();
+            }
+        }
+
+        function resetFlags() {
+            showOptionsFlag = false;
+            showAnswerFlag = false;
+            showSolutionFlag = false;
+        }
+
+        // Scoreboard Adjustments
+        function adjustScore(team, amt) {
+            scores[team] += amt;
+            document.getElementById(`score-${team}`).innerText = scores[team];
+        }
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                nextQuestion();
+            } else if (e.key === 'ArrowLeft') {
+                prevQuestion();
+            } else if (e.key.toLowerCase() === 'o') {
+                toggleOptions();
+            } else if (e.key.toLowerCase() === 'a') {
+                toggleAnswer();
+            } else if (e.key.toLowerCase() === 's') {
+                toggleSolution();
+            } else if (e.key.toLowerCase() === 'd') {
+                toggleDrawMode();
+            }
+        });
+        // Message Popup Logic
+        let messageStep = 1;
+
+        function openMessagePopup() {
+            messageStep = 1;
+            document.getElementById('msg-card-1').style.display = 'block';
+            document.getElementById('msg-card-2').style.display = 'none';
+            document.getElementById('btn-next-msg').innerText = 'Next Message →';
+            document.getElementById('message-modal').style.display = 'flex';
+        }
+
+        function closeMessagePopup() {
+            document.getElementById('message-modal').style.display = 'none';
+        }
+
+        function nextMessage() {
+            if (messageStep === 1) {
+                document.getElementById('msg-card-1').style.display = 'none';
+                document.getElementById('msg-card-2').style.display = 'block';
+                document.getElementById('btn-next-msg').innerText = 'Close';
+                messageStep = 2;
+            } else {
+                closeMessagePopup();
+            }
+        }
+    </script>
+
+    <!-- Special Message Modal -->
+    <div id="message-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(6,7,19,0.9); z-index:1000; justify-content:center; align-items:center; backdrop-filter:blur(8px);">
+        <div
+            style="background:var(--surface); border:2px solid var(--border); padding:3rem; border-radius:24px; max-width:600px; width:90%; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.6); position:relative; display:flex; flex-direction:column; gap:1.5rem;">
+            <button onclick="closeMessagePopup()"
+                style="position:absolute; top:1.5rem; right:1.5rem; background:none; border:none; color:var(--text-muted); font-size:1.8rem; cursor:pointer;">&times;</button>
+            <h2
+                style="font-family:var(--font-display); font-size:2rem; background:linear-gradient(135deg, #a5b4fc, #6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-weight:800; margin-bottom:0.5rem;">
+                A Message for You</h2>
+
+            <div id="msg-card-1"
+                style="background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:2rem; border-radius:16px; font-size:1.6rem; font-weight:600; line-height:1.5; color:#fff;">
+                From Srikanth 😉
+            </div>
+
+            <div id="msg-card-2"
+                style="background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:2rem; border-radius:16px; font-size:1.4rem; font-weight:600; line-height:1.6; display:none; color:#34d399;">
+                I could make this quiz in one stormy night. You just have to believe ! 💪
+            </div>
+
+            <button class="btn" id="btn-next-msg" onclick="nextMessage()"
+                style="align-self:center; display:inline-flex; padding:0.6rem 2rem; font-size:1rem; font-weight:700;">Next
+                Message &rarr;</button>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Portal - Welcome to Quiz World</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #060713;
+            --surface: rgba(16, 18, 38, 0.5); /* 50% transparency */
+            --surface-hover: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.15);
+            --accent-primary: #6366f1;
+            --text-main: #f9fafb;
+            --text-muted: #d1d5db;
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Fullscreen backdrop video behaving like a motion gif */
+        .backdrop-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+            pointer-events: none;
+            filter: brightness(0.4) contrast(1.1) saturate(1.1);
+        }
+
+        /* Subtle overlay to enhance readability */
+        .color-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(6, 7, 19, 0.7) 0%, rgba(99, 102, 241, 0.15) 100%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .portal-container {
+            width: 90%;
+            max-width: 900px;
+            text-align: center;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .portal-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .portal-title {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #818cf8, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+            letter-spacing: -0.02em;
+        }
+
+        .portal-subtitle {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            perspective: 1000px;
+        }
+
+        .quiz-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .quiz-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .quiz-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(99, 102, 241, 0.6);
+            background: rgba(16, 18, 38, 0.65);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.25);
+        }
+
+        .quiz-card:hover::before {
+            opacity: 1;
+        }
+
+        .quiz-card-badge {
+            align-self: flex-start;
+            font-size: 0.8rem;
+            background: rgba(99, 102, 241, 0.25);
+            color: #c7d2fe;
+            padding: 0.3rem 0.9rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .quiz-card-title {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 0.5rem;
+        }
+
+        .quiz-card-desc {
+            font-size: 1rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        .quiz-card.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .quiz-card.disabled .quiz-card-badge {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .portal-footer {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+            font-weight: 500;
+            z-index: 20;
+            pointer-events: none;
+            letter-spacing: 0.05em;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .portal-title {
+                font-size: 2.5rem;
+            }
+            .portal-subtitle {
+                font-size: 1.2rem;
+            }
+            .quiz-grid {
+                grid-template-columns: 1fr;
+            }
+            .portal-footer {
+                position: static;
+                margin-top: 2rem;
+                text-align: center;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fullscreen Backdrop Motion Video -->
+    <video class="backdrop-video" autoplay loop muted playsinline>
+        <source src="it_must_have_a_nice_image_of_a.mp4" type="video/mp4">
+    </video>
+
+    <!-- Color grading overlay -->
+    <div class="color-overlay"></div>
+
+    <div class="portal-container">
+        <div class="portal-header">
+            <h1 class="portal-title">Welcome to Quiz World</h1>
+            <p class="portal-subtitle">Choose a category to begin your challenge</p>
+        </div>
+
+        <div class="quiz-grid">
+            <!-- Optics - Lens Card -->
+            <a href="optics_quiz_competition.html" class="quiz-card">
+                <span class="quiz-card-badge">Physics</span>
+                <h2 class="quiz-card-title">Optics - Lens</h2>
+                <p class="quiz-card-desc">Practice 15 competition-level questions on lenses, mirrors, combinations, and ray systems.</p>
+            </a>
+
+            <!-- Refraction Card -->
+            <a href="refraction_quiz_competition.html" class="quiz-card">
+                <span class="quiz-card-badge">Physics</span>
+                <h2 class="quiz-card-title">Refraction</h2>
+                <p class="quiz-card-desc">Master 15 advanced, JEE Advanced level questions on Snell's Law, Apparent Depth, and Total Internal Reflection (TIR).</p>
+            </a>
+
+            <div class="quiz-card disabled">
+                <span class="quiz-card-badge">Chemistry</span>
+                <h2 class="quiz-card-title">Organic Chemistry</h2>
+                <p class="quiz-card-desc">Practice nomenclature, reactions, mechanisms, and stereochemistry. (Coming Soon)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Author Attribution Signature -->
+    <div class="portal-footer" style="text-align: right; line-height: 1.4;">
+        N Srikanth<br>
+        Nine Education<br>
+        Narsingi
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Portal - Welcome to Quiz World</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #060713;
+            --surface: rgba(16, 18, 38, 0.5); /* 50% transparency */
+            --surface-hover: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.15);
+            --accent-primary: #6366f1;
+            --text-main: #f9fafb;
+            --text-muted: #d1d5db;
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Fullscreen backdrop video behaving like a motion gif */
+        .backdrop-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+            pointer-events: none;
+            filter: brightness(0.4) contrast(1.1) saturate(1.1);
+        }
+
+        /* Subtle overlay to enhance readability */
+        .color-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(6, 7, 19, 0.7) 0%, rgba(99, 102, 241, 0.15) 100%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .portal-container {
+            width: 90%;
+            max-width: 900px;
+            text-align: center;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .portal-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .portal-title {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #818cf8, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+            letter-spacing: -0.02em;
+        }
+
+        .portal-subtitle {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            perspective: 1000px;
+        }
+
+        .quiz-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .quiz-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .quiz-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(99, 102, 241, 0.6);
+            background: rgba(16, 18, 38, 0.65);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.25);
+        }
+
+        .quiz-card:hover::before {
+            opacity: 1;
+        }
+
+        .quiz-card-badge {
+            align-self: flex-start;
+            font-size: 0.8rem;
+            background: rgba(99, 102, 241, 0.25);
+            color: #c7d2fe;
+            padding: 0.3rem 0.9rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .quiz-card-title {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 0.5rem;
+        }
+
+        .quiz-card-desc {
+            font-size: 1rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        .quiz-card.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .quiz-card.disabled .quiz-card-badge {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .portal-footer {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+            font-weight: 500;
+            z-index: 20;
+            pointer-events: none;
+            letter-spacing: 0.05em;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .portal-title {
+                font-size: 2.5rem;
+            }
+            .portal-subtitle {
+                font-size: 1.2rem;
+            }
+            .quiz-grid {
+                grid-template-columns: 1fr;
+            }
+            .portal-footer {
+                position: static;
+                margin-top: 2rem;
+                text-align: center;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fullscreen Backdrop Motion Video -->
+    <video class="backdrop-video" autoplay loop muted playsinline>
+        <source src="../Optics /it_must_have_a_nice_image_of_a.mp4" type="video/mp4">
+    </video>
+
+    <!-- Color grading overlay -->
+    <div class="color-overlay"></div>
+
+    <div class="portal-container">
+        <div class="portal-header">
+            <h1 class="portal-title">Welcome to Quiz World</h1>
+            <p class="portal-subtitle">Choose a category to begin your challenge</p>
+        </div>
+
+        <div class="modes-wrapper" style="display: flex; gap: 2rem; justify-content: center; width: 100%; max-width: 900px; margin: 0 auto; flex-wrap: wrap;">
+            
+            <!-- Left Side: Presenter Quiz Mode -->
+            <div class="mode-card" style="flex: 1; min-width: 280px; max-width: 420px; display: flex; flex-direction: column; gap: 1.5rem; background: rgba(16, 18, 38, 0.4); border: 2px solid var(--border); padding: 2.5rem; border-radius: 24px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; text-align: left;">
+                <span class="mode-badge" style="align-self: flex-start; font-size: 0.8rem; background: rgba(99, 102, 241, 0.25); color: #c7d2fe; padding: 0.3rem 0.9rem; border-radius: 9999px; font-weight: 700; border: 1px solid rgba(99, 102, 241, 0.4); letter-spacing: 0.05em; text-transform: uppercase;">Classroom Mode</span>
+                <h2 style="font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; color: #fff;">Presenter Quiz</h2>
+                <p style="font-size: 1rem; color: var(--text-muted); line-height: 1.5;">Interactive team-based competition with a shared presenter scoreboard.</p>
+                
+                <select id="presenter-dropdown" style="width: 100%; padding: 1rem; border-radius: 12px; background: rgba(6, 7, 19, 0.85); border: 2px solid var(--border); color: #fff; font-family: var(--font-body); font-size: 1.1rem; cursor: pointer; outline: none; -webkit-appearance: none; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236366f1%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1.2rem top 50%; background-size: 0.7rem auto; padding-right: 2.5rem;">
+                    <option value="electrostats_quiz_competition.html">Electrostats - Gauss Law</option>
+                    <option value="optics_quiz_competition.html">Optics - Lens</option>
+                    <option value="refraction_quiz_competition.html">Refraction</option>
+                </select>
+                
+                <a href="#" onclick="location.href=document.getElementById('presenter-dropdown').value; return false;" style="width: 100%; text-align: center; text-decoration: none; display: block; padding: 1rem; border-radius: 12px; font-size: 1.15rem; font-weight: 700; background: linear-gradient(135deg, var(--accent-primary), #4f46e5); color: #fff; border: 2px solid rgba(255,255,255,0.15); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s ease;">Launch Quiz &rarr;</a>
+            </div>
+
+            <!-- Right Side: Student Exam Mode -->
+            <div class="mode-card" style="flex: 1; min-width: 280px; max-width: 420px; display: flex; flex-direction: column; gap: 1.5rem; background: rgba(16, 18, 38, 0.4); border: 2px solid var(--border); padding: 2.5rem; border-radius: 24px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; text-align: left;">
+                <span class="mode-badge" style="align-self: flex-start; font-size: 0.8rem; background: rgba(52, 211, 153, 0.25); color: #a7f3d0; padding: 0.3rem 0.9rem; border-radius: 9999px; font-weight: 700; border: 1px solid rgba(52, 211, 153, 0.4); letter-spacing: 0.05em; text-transform: uppercase;">Student Mode</span>
+                <h2 style="font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; color: #fff;">Student Exam</h2>
+                <p style="font-size: 1rem; color: var(--text-muted); line-height: 1.5;">Individual points-based game with timer constraints and dynamic scoring.</p>
+                
+                <select id="exam-dropdown" style="width: 100%; padding: 1rem; border-radius: 12px; background: rgba(6, 7, 19, 0.85); border: 2px solid var(--border); color: #fff; font-family: var(--font-body); font-size: 1.1rem; cursor: pointer; outline: none; -webkit-appearance: none; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2334d399%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1.2rem top 50%; background-size: 0.7rem auto; padding-right: 2.5rem;">
+                    <option value="electrostats_exam.html">Electrostats - Gauss Law</option>
+                    <option value="optics_exam.html">Optics - Lens</option>
+                    <option value="refraction_exam.html">Refraction</option>
+                </select>
+                
+                <a href="#" onclick="location.href=document.getElementById('exam-dropdown').value; return false;" style="width: 100%; text-align: center; text-decoration: none; display: block; padding: 1rem; border-radius: 12px; font-size: 1.15rem; font-weight: 700; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: 2px solid rgba(255,255,255,0.15); box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s ease;">Start Exam &rarr;</a>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Floating Special Message Button -->
+    <button onclick="openMessagePopup()" style="position: fixed; bottom: 1.5rem; left: 2rem; background: rgba(16, 18, 38, 0.6); border: 2px solid var(--border); color: #fff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); font-size: 1.5rem; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 100;" onmouseover="this.style.transform='scale(1.1)'; this.style.borderColor='var(--accent-primary)';" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='var(--border)';">
+        ✉️
+    </button>
+
+    <!-- Author Attribution Signature -->
+    <div class="portal-footer" style="text-align: right; line-height: 1.4;">
+        N Srikanth<br>
+        Nine Education<br>
+        Narsingi
+    </div>
+
+    <!-- Special Message Modal -->
+    <div id="message-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(6,7,19,0.9); z-index:1000; justify-content:center; align-items:center; backdrop-filter:blur(8px);">
+        <div style="background:rgba(16,18,38,0.9); border:2px solid rgba(255,255,255,0.15); padding:3rem; border-radius:24px; max-width:600px; width:90%; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.6); position:relative; display:flex; flex-direction:column; gap:1.5rem; color:#fff; font-family:'Space Grotesk', sans-serif;">
+            <button onclick="closeMessagePopup()" style="position:absolute; top:1.5rem; right:1.5rem; background:none; border:none; color:#d1d5db; font-size:1.8rem; cursor:pointer;">&times;</button>
+            <h2 style="font-family:'Outfit', sans-serif; font-size:2rem; background:linear-gradient(135deg, #a5b4fc, #6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-weight:800; margin-bottom:0.5rem;">A Message for You</h2>
+            
+            <div id="msg-card-1" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.15); padding:2rem; border-radius:16px; font-size:1.6rem; font-weight:600; line-height:1.5; color:#fff;">
+                From Srikanth 😉
+            </div>
+            
+            <div id="msg-card-2" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.15); padding:2rem; border-radius:16px; font-size:1.4rem; font-weight:600; line-height:1.6; display:none; color:#34d399;">
+                I could make this quiz in one stormy night. You just have to believe ! 💪
+            </div>
+            
+            <button id="btn-next-msg" onclick="nextMessage()" style="align-self:center; display:inline-flex; padding:0.6rem 2rem; font-size:1rem; font-weight:700; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:8px; cursor:pointer; font-family:'Space Grotesk', sans-serif;">Next Message &rarr;</button>
+        </div>
+    </div>
+
+    <script>
+        function updateQuizLink(val) {
+            if (val && val !== 'chemistry') {
+                window.location.href = val;
+            }
+        }
+
+        // Special Message Popup Logic
+        let messageStep = 1;
+
+        function openMessagePopup() {
+            messageStep = 1;
+            document.getElementById('msg-card-1').style.display = 'block';
+            document.getElementById('msg-card-2').style.display = 'none';
+            document.getElementById('btn-next-msg').innerText = 'Next Message →';
+            document.getElementById('message-modal').style.display = 'flex';
+        }
+
+        function closeMessagePopup() {
+            document.getElementById('message-modal').style.display = 'none';
+        }
+
+        function nextMessage() {
+            if (messageStep === 1) {
+                document.getElementById('msg-card-1').style.display = 'none';
+                document.getElementById('msg-card-2').style.display = 'block';
+                document.getElementById('btn-next-msg').innerText = 'Close';
+                messageStep = 2;
+            } else {
+                closeMessagePopup();
+            }
+        }
+    </script>
+</body>
+</html>

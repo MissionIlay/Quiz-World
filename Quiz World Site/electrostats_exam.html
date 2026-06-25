@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electrostats Quiz - Electrostats Quiz</title>
+    
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #060713;
+            --surface: #101226;
+            --border: rgba(255, 255, 255, 0.12);
+            --accent-primary: #6366f1;
+            --accent-success: #10b981;
+            --accent-error: #ef4444;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Presentation Workspace Grid */
+        .workspace {
+            flex: 1;
+            display: none;
+            grid-template-rows: auto minmax(0, 1fr) auto;
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .workspace.active {
+            display: grid !important;
+        }
+
+        /* Top control bar */
+        header {
+            background: var(--surface);
+            border-bottom: 2px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .header-left h1 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #6366f1, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-left p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .presenter-controls {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-primary);
+        }
+
+        .btn.active {
+            background: var(--accent-primary) !important;
+            color: white !important;
+            border-color: var(--accent-primary) !important;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn.danger-btn.active {
+            background: var(--accent-error) !important;
+            border-color: var(--accent-error) !important;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Central Display Board */
+        .board-container {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+            padding: 2rem;
+            align-items: stretch;
+            overflow: hidden;
+            position: relative;
+            min-height: 0;
+        }
+
+        .left-board {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background: rgba(16, 18, 38, 0.4);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            justify-content: flex-start;
+            position: relative;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        /* Blur state when question is locked */
+        .locked-blur {
+            filter: blur(15px);
+            pointer-events: none;
+            transition: filter 0.3s ease;
+        }
+
+        /* Start Overlay */
+        .start-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(6, 7, 19, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 8;
+            transition: opacity 0.3s ease;
+        }
+
+        .start-circle-btn {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), #4f46e5);
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 30px var(--accent-primary-glow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .start-circle-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 45px rgba(99, 102, 241, 0.6);
+            border-color: #fff;
+        }
+
+        .q-tag {
+            font-size: 1rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            padding: 0.4rem 1.2rem;
+            border-radius: 9999px;
+            width: fit-content;
+            font-weight: 700;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .q-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1.4;
+            color: #fff;
+        }
+
+        .svg-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .right-board {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            justify-content: flex-start;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+            min-height: 0;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .opt-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            font-size: 1.4rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .opt-card:hover {
+            border-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .opt-card.correct {
+            background: rgba(16, 185, 129, 0.12) !important;
+            border-color: var(--accent-success) !important;
+            color: #10b981;
+        }
+
+        .opt-letter {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.8rem;
+            color: var(--accent-primary);
+            margin-right: 1.5rem;
+            background: rgba(99, 102, 241, 0.1);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+
+        /* Points Banner & Award Panel */
+        .award-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .award-banner {
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--accent-success);
+        }
+
+        .award-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+        }
+
+        .award-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 0.6rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .award-btn:hover {
+            border-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .solution-panel {
+            background: rgba(16, 185, 129, 0.05);
+            border: 2px solid rgba(16, 185, 129, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            font-size: 1.25rem;
+            line-height: 1.6;
+            color: #d1d5db;
+        }
+
+        .solution-panel h3 {
+            color: var(--accent-success);
+            font-size: 1.4rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Blackboard Annotation Canvas Overlay */
+        .blackboard-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .blackboard-canvas.active {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+
+        /* Bottom Scoreboard & Navigation footer */
+        footer {
+            background: var(--surface);
+            border-top: 2px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .nav-section {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .scoreboard {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .score-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 0.4rem 1rem;
+            border-radius: 12px;
+        }
+
+        .score-box .team-lbl {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .score-box .score-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .score-adjust {
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-adjust:hover {
+            background: var(--accent-primary);
+        }
+
+        /* SVG modifications for large display */
+        svg {
+            transform: scale(1.3);
+            transform-origin: center;
+        }
+
+        /* Landing Screen Styles */
+        .landing-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--bg-dark);
+            padding: 2rem;
+            z-index: 100;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .landing-container {
+            background: rgba(16, 18, 38, 0.4);
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .landing-title {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #6366f1, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .landing-subtitle {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .quiz-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 18px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.25);
+        }
+
+        .quiz-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quiz-card.disabled:hover {
+            transform: none;
+            border-color: var(--border);
+            box-shadow: none;
+        }
+
+        .quiz-card-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .quiz-card-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .quiz-card-badge {
+            align-self: flex-start;
+            font-size: 0.75rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .quiz-card.disabled .quiz-card-badge {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border-color: var(--border);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Welcome / Quiz Selection Screen -->
+    <div class="landing-screen" id="landing-screen">
+        <div class="landing-container">
+            <h1 class="landing-title">Electrostats Quiz</h1>
+            
+            <!-- Intro Video -->
+            <div class="intro-video-container" style="max-width: 500px; width: 100%; margin: 0.5rem auto; border-radius: 16px; overflow: hidden; border: 2px solid var(--border); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);">
+                <video src="it_must_have_a_nice_image_of_a.mp4" controls autoplay muted loop style="width: 100%; display: block;"></video>
+            </div>
+
+            <p class="landing-subtitle">Select Quiz</p>
+            
+                        <div class="quiz-grid">
+                <!-- Electrostats Card -->
+                <div class="quiz-card" onclick="selectQuiz('electrostats')">
+                    <span class="quiz-card-badge">Physics</span>
+                    <h2 class="quiz-card-title">Electrostats - Gauss Law</h2>
+                    <p class="quiz-card-desc">Test your understanding of Electric Flux, Gauss's Law, conductors, and charge distributions with 30 JEE Advanced level questions.</p>
+                </div>
+
+                <!-- Placeholder Cards for Rich Aesthetics -->
+                <div class="quiz-card disabled">
+                    <span class="quiz-card-badge">Physics</span>
+                    <h2 class="quiz-card-title">Optics - Lens</h2>
+                    <p class="quiz-card-desc">Practice 15 competition-level questions on lenses, mirrors, combinations, and ray systems. (Coming Soon)</p>
+                </div>
+
+                <div class="quiz-card disabled">
+                    <span class="quiz-card-badge">Chemistry</span>
+                    <h2 class="quiz-card-title">Organic Chemistry</h2>
+                    <p class="quiz-card-desc">Practice nomenclature, reactions, mechanisms, and stereochemistry. (Coming Soon)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="workspace">
+        <header>
+            <div class="header-left">
+                <h1 id="presentation-title">Electrostats - Gauss Law (Exam Mode)</h1>
+                <p id="question-index-lbl">
+                    Question 1 of 30 &bull; 
+                    <span id="timer-el" style="color:var(--accent-primary); font-weight:700; margin-right:1rem;">Question Timer: 0s (Worth 10 pts)</span>
+                </p>
+            </div>
+            
+            <div class="presenter-controls">
+                <button class="btn danger-btn" id="btn-draw" onclick="toggleDrawMode()">Draw Mode (D)</button>
+                <button class="btn" onclick="clearCanvas()">Clear Board</button>
+            </div>
+        </header>
+
+        <main class="board-container">
+            <!-- Canvas Overlay for Sketching -->
+            <canvas class="blackboard-canvas" id="blackboard"></canvas>
+
+            <div class="left-board" id="left-board-el">
+                <!-- Circular Start Button Overlay -->
+                <div class="start-overlay" id="start-overlay-el">
+                    <button class="start-circle-btn" onclick="startQuestionTimer()">START</button>
+                </div>
+
+                <div class="locked-blur" id="question-content-el">
+                    <div class="q-tag" id="q-tag-el">Lens & Mirror</div>
+                    <div class="q-title" id="q-title-el">
+                        Loading question...
+                    </div>
+                    <div class="svg-wrap" id="q-svg-wrap" style="display: none;">
+                        <!-- SVG gets injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-board">
+                <!-- MCQ Options (Default: Hidden or shown based on Toggle Options) -->
+                <div class="options-list" id="options-list-el" style="display: none;">
+                    <!-- Option cards -->
+                </div>
+
+                <!-- Score Awarding Panel (Appears after answer is selected) -->
+                <div class="award-panel" id="award-panel-el" style="display: none;">
+                    <div class="award-banner" id="award-banner-el">Time: 24s &rarr; Worth 5 Points!</div>
+                </div>
+
+                <!-- Solution Card (Default: Hidden) -->
+                <div class="solution-panel" id="solution-panel-el" style="display: none;">
+                    <h3>Step-by-step Solution</h3>
+                    <div id="solution-text-el">Solution...</div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="nav-section">
+                <button class="btn" onclick="location.href='index.html'">Home 🏠</button>
+                <button class="btn" onclick="prevQuestion()">&larr; Previous</button>
+                <button class="btn" id="next-btn" onclick="nextQuestion()">Next &rarr;</button>
+            </div>
+
+            <div class="scoreboard" style="justify-content: flex-end; gap: 2rem;">
+                <span class="score-display-total" style="font-size: 1.25rem; font-weight: 700; background: rgba(99,102,241,0.2); padding: 0.5rem 1.5rem; border-radius: 9999px; border: 1px solid rgba(99,102,241,0.4); display: flex; align-items: center; gap: 0.5rem; color: #fff;">
+                    Score: <span id="score-total" style="color: #34d399;">0</span> pts
+                </span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Final Score Summary Modal -->
+    <div id="summary-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(6,7,19,0.95); z-index:2000; justify-content:center; align-items:center; backdrop-filter:blur(12px);">
+        <div style="background:rgba(16,18,38,0.9); border:2px solid rgba(255,255,255,0.15); padding:4rem 3rem; border-radius:24px; max-width:600px; width:90%; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.6); position:relative; display:flex; flex-direction:column; gap:2rem; color:#fff; font-family:'Space Grotesk', sans-serif;">
+            <h2 style="font-family:'Outfit', sans-serif; font-size:2.5rem; background:linear-gradient(135deg, #a5b4fc, #6366f1, #34d399); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-weight:800; margin-bottom:0.5rem;">Quiz Completed!</h2>
+            
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.15); padding:2rem; border-radius:16px; display:flex; flex-direction:column; gap:1rem;">
+                <div style="font-size:1.5rem; font-weight:600; color:#c7d2fe;">Your Total Score</div>
+                <div style="font-size:3.5rem; font-weight:800; color:#34d399; margin:0.5rem 0;" id="summary-score">0 pts</div>
+                <div style="font-size:1.1rem; color:#9ca3af;" id="summary-stats">Accuracy: 0% | Time Taken: 0s</div>
+            </div>
+            
+            <div style="font-size:1.25rem; font-weight:600; line-height:1.6; color:#c7d2fe; padding:0 1rem;" id="summary-message">
+                Great job! You finished the exam.
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+                <button onclick="location.href='index.html'" style="padding:1rem 2rem; font-size:1.1rem; font-weight:700; background:linear-gradient(135deg, var(--accent-primary), #4f46e5); border:none; color:#fff; border-radius:12px; cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 15px rgba(99,102,241,0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Go Home 🏠</button>
+                <button onclick="location.reload()" style="padding:1rem 2rem; font-size:1.1rem; font-weight:700; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:12px; cursor:pointer; transition:all 0.3s ease;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">Retry 🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                id: 1,
+                tag: "Electric Flux",
+                question: "According to the figure, a hemispherical object is placed in a uniform electric field \\(E\\). Find the outward flux through its curved surface:",
+                options: [
+                    "\\(E \\pi R^2\\)",
+                    "\\(\\frac{E \\pi R^2}{2}\\)",
+                    "\\(E 2\\pi R\\)",
+                    "\\(E \\pi R\\)"
+                ],
+                correctIndex: 0,
+                solution: "The net outward flux through any closed surface in a uniform field is zero. The hemisphere has a flat circular face and a curved surface. Let \\(\\phi_{\\text{flat}}\\) be the flux through the flat circular face and \\(\\phi_{\\text{curved}}\\) be the flux through the curved surface.<br>\\(\\phi_{\\text{net}} = \\phi_{\\text{flat}} + \\phi_{\\text{curved}} = 0\\)<br>Since the electric field lines enter the flat circular face: \\(\\phi_{\\text{flat}} = \\int E \\cdot dA = E \\cdot (\\pi R^2) \\cos(180^\\circ) = -E \\pi R^2\\).<br>Therefore, \\(\\phi_{\\text{curved}} = -\\phi_{\\text{flat}} = E \\pi R^2\\).",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p1_10.png" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 2,
+                tag: "Electric Flux",
+                question: "A cylinder of radius R and length L is placed in a uniform electric field E parallel to the cylinder axis. The total flux for the surface of the cylinder is given by:",
+                options: [
+                    "\\(2\\pi R^2 E\\)",
+                    "\\(\\pi R^2 / E\\)",
+                    "\\(E\\)",
+                    "Zero"
+                ],
+                correctIndex: 3,
+                solution: "Since the electric field is parallel to the axis of the cylinder, the field lines entering one flat face leave the other flat face. The net flux through the two flat surfaces is \\(-E\\pi R^2 + E\\pi R^2 = 0\\). The electric field is parallel to the curved surface, so the flux through the curved surface is also zero. Thus, the total flux is zero.",
+                svg: null
+            },
+            {
+                id: 3,
+                tag: "Gauss's Law",
+                question: "An insulated sphere of radius R has a uniform volume charge density \\(\\rho\\). The electric field at a point P inside the sphere and distant r from the centre is:",
+                options: [
+                    "\\(\\frac{R\\rho}{3\\epsilon_0}\\)",
+                    "\\(\\frac{r\\rho}{3\\epsilon_0}\\)",
+                    "Zero",
+                    "\\(\\frac{\\rho}{3\\epsilon_0 r}\\)"
+                ],
+                correctIndex: 1,
+                solution: "By Gauss's law for a sphere of radius \\(r\\) inside the insulated sphere (\\(r < R\\)):<br>\\(\\oint E \\cdot dA = \\frac{q_{\\text{enclosed}}}{\\epsilon_0}\\)<br>\\(E \\cdot 4\\pi r^2 = \\frac{\\rho \\cdot \\frac{4}{3}\\pi r^3}{\\epsilon_0} \\implies E = \\frac{\\rho r}{3\\epsilon_0}\\).",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p2_14.png" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 4,
+                tag: "Gauss's Law",
+                question: "If the electric flux entering and leaving an enclosed surface respectively is \\(\\phi_1\\) and \\(\\phi_2\\), the electric charge inside the surface will be:",
+                options: [
+                    "\\((\\phi_2 - \\phi_1)\\epsilon_0\\)",
+                    "\\((\\phi_1 + \\phi_2)/\\epsilon_0\\)",
+                    "\\((\\phi_2 - \\phi_1)/\\epsilon_0\\)",
+                    "\\((\\phi_1 + \\phi_2)\\epsilon_0\\)"
+                ],
+                correctIndex: 0,
+                solution: "According to Gauss's law, net flux \\(\\phi_{\\text{net}} = \\frac{Q_{\\text{enclosed}}}{\\epsilon_0}\\).<br>The entering flux is negative and leaving flux is positive, so the net flux is \\(\\phi_{\\text{net}} = \\phi_2 - \\phi_1\\).<br>Thus, \\(Q_{\\text{enclosed}} = (\\phi_2 - \\phi_1)\\epsilon_0\\).",
+                svg: null
+            },
+            {
+                id: 5,
+                tag: "Electric Flux",
+                question: "A charge Q is situated at the centre of a cube. The electric flux through one of the faces of the cube is:",
+                options: [
+                    "\\(Q/\\epsilon_0\\)",
+                    "\\(Q/2\\epsilon_0\\)",
+                    "\\(Q/4\\epsilon_0\\)",
+                    "\\(Q/6\\epsilon_0\\)"
+                ],
+                correctIndex: 3,
+                solution: "Total flux through the cube enclosing charge \\(Q\\) is \\(Q/\\epsilon_0\\). By symmetry, the flux is equally distributed among the 6 faces. Therefore, the flux through one face is \\(Q/6\\epsilon_0\\).",
+                svg: null
+            },
+            {
+                id: 6,
+                tag: "Electric Flux",
+                question: "In a region of space, the electric field is given by \\(\\vec{E} = 8\\hat{i} + 4\\hat{j} + 3\\hat{k}\\). The electric flux through a surface of area 100 units in the xy plane is:",
+                options: [
+                    "800 units",
+                    "300 units",
+                    "400 units",
+                    "1500 units"
+                ],
+                correctIndex: 1,
+                solution: "The area vector for a surface in the xy-plane is along the z-axis, so \\(\\vec{A} = 100\\hat{k}\\).<br>Flux \\(\\phi = \vec{E} \\cdot \\vec{A} = (8\\hat{i} + 4\\hat{j} + 3\\hat{k}) \\cdot (100\\hat{k}) = 3 \\times 100 = 300\\text{ units}\\).",
+                svg: null
+            },
+            {
+                id: 7,
+                tag: "Gauss's Law",
+                question: "A point charge Q is located just above the centre of the flat face of a hemisphere as shown in figure. The electric flux through the flat face and curved face of hemisphere are respectively:",
+                options: [
+                    "\\(\\frac{Q}{2\\epsilon_0}, -\\frac{Q}{2\\epsilon_0}\\)",
+                    "\\(-\\frac{Q}{2\\epsilon_0}, \\frac{Q}{2\\epsilon_0}\\)",
+                    "\\(\\frac{Q}{\\epsilon_0}, -\\frac{Q}{\\epsilon_0}\\)",
+                    "\\(-\\frac{Q}{\\epsilon_0}, \\frac{Q}{\\epsilon_0}\\)"
+                ],
+                correctIndex: 1,
+                solution: "If we place another identical hemisphere on top, the charge \\(Q\\) lies at the center of the sphere formed by the two hemispheres. The total flux through the sphere is \\(Q/\\epsilon_0\\). By symmetry, the flux from the charge passing through the lower hemisphere is \\(Q/2\\epsilon_0\\).<br>Since the charge is just above the flat face, the field lines enter the flat face (negative flux) and leave the curved face (positive flux). The flux through the flat face is \\(-\\frac{Q}{2\\epsilon_0}\\), and the flux through the curved face is \\(\\frac{Q}{2\\epsilon_0}\\).",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p3_19.jpeg" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 8,
+                tag: "Gauss's Law",
+                question: "Fig. 2.95 shows four charges \\(q_1\\), \\(q_2\\), \\(q_3\\), and \\(q_4\\) fixed in space. Then the total flux of the electric field through a closed surface S due to all the charges is:",
+                options: [
+                    "not equal to the total flux through S due to \\(q_3\\) and \\(q_4\\)",
+                    "equal to the total flux through S due to \\(q_3\\) and \\(q_4\\)",
+                    "zero if \\(q_1 + q_2 = q_3 + q_4\\)",
+                    "twice the total flux through S due to \\(q_3\\) and \\(q_4\\) if \\(q_1 + q_2 = q_3 + q_4\\)"
+                ],
+                correctIndex: 1,
+                solution: "According to Gauss's law, the net electric flux through any closed surface is determined only by the charges enclosed inside the surface (here, \\(q_3\\) and \\(q_4\\)). The charges outside (\(q_1\\) and \(q_2\\)) do not contribute to the net flux through S.",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p3_20.jpeg" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 9,
+                tag: "Gauss's Law",
+                question: "A uniformly charged and infinitely long line having a linear charge density \\(\\lambda\\) is placed at a normal distance \\(y\\) from a point O. Consider a sphere of radius \\(R\\) with \\(O\\) as the center and \\(R > y\\). Electric flux through the surface of the sphere is:",
+                options: [
+                    "zero",
+                    "\\(\\frac{2\\lambda R}{\\epsilon_0}\\)",
+                    "\\(\\frac{2\\lambda\\sqrt{R^2 - y^2}}{\\epsilon_0}\\)",
+                    "\\(\\frac{\\lambda\\sqrt{R^2 + y^2}}{\\epsilon_0}\\)"
+                ],
+                correctIndex: 2,
+                solution: "The portion of the line charge inside the sphere forms a chord of length \\(2x\\).<br>Using Pythagoras' theorem, the half-length of the chord is \\(x = \\sqrt{R^2 - y^2}\\).<br>So the total length inside the sphere is \\(2\\sqrt{R^2 - y^2}\\).<br>The charge enclosed is \\(q_{\\text{enclosed}} = 2\\lambda\\sqrt{R^2 - y^2}\\).<br>Thus, the flux is \\(\\phi = \\frac{q_{\\text{enclosed}}}{\\epsilon_0} = \\frac{2\\lambda\\sqrt{R^2 - y^2}}{\\epsilon_0}\\).",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p4_23.jpeg" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 10,
+                tag: "Conductors",
+                question: "An uncharged conducting large plate is placed as shown. Now an electric field E toward right is applied. Find the induced charge density on the right surface of the plate.",
+                options: [
+                    "-\\(\\epsilon_0 E\\)",
+                    "\\(\\epsilon_0 E\\)",
+                    "-2\\(\\epsilon_0 E\\)",
+                    "2\\(\\epsilon_0 E\\)"
+                ],
+                correctIndex: 1,
+                solution: "Inside a conductor, the net electric field at any point in electrostatic equilibrium is zero. When external field \\(E\\) is applied to the right, it induces charges on the plate. If \\(\\sigma\\) is the induced charge density on the right surface (and \\(-\\sigma\\) on the left surface):<br>The induced electric field inside the conductor is \\(E_{\\text{induced}} = \\frac{\\sigma}{\\epsilon_0}\\).<br>To cancel the applied field \\(E\\), we must have \\(\\frac{\\sigma}{\\epsilon_0} = E \\implies \\sigma = \\epsilon_0 E\\).",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p4_24.jpeg" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 11,
+                tag: "Electric Potential",
+                question: "At a point in space, the electric field points towards north. In the region surrounding this point, the rate of change of potential will be zero along:",
+                options: [
+                    "north",
+                    "south",
+                    "north-south",
+                    "east-west"
+                ],
+                correctIndex: 3,
+                solution: "The relationship between electric field and potential is \\(\\vec{E} = -\\nabla V\\). The rate of change of potential (potential gradient) is zero along the equipotential lines/surfaces, which are always perpendicular to the electric field lines. Since the field points towards the North, the potential does not change along the East-West direction.",
+                svg: null
+            },
+            {
+                id: 12,
+                tag: "Electric Flux",
+                question: "The electric flux from a cube of edge l is \\(\\phi\\). If an edge of the cube is made 2l and the charge enclosed is halved, its value will be:",
+                options: [
+                    "\\(4\\phi\\)",
+                    "\\(2\\phi\\)",
+                    "\\(\\phi/2\\)",
+                    "\\(\\phi\\)"
+                ],
+                correctIndex: 2,
+                solution: "The electric flux through a closed surface depends only on the net charge enclosed by the surface, not on the dimensions of the surface (Gauss's Law: \\(\\phi = Q_{\\text{enclosed}}/\\epsilon_0\\)). If the charge is halved, the flux is also halved, i.e., \\(\\phi/2\\).",
+                svg: null
+            },
+            {
+                id: 13,
+                tag: "Conductors",
+                question: "A metallic shell has a point charge q kept inside its cavity. Which of the following diagrams correctly represents the electric lines of forces?",
+                options: [
+                    "Diagram A",
+                    "Diagram B",
+                    "Diagram C",
+                    "Diagram D"
+                ],
+                correctIndex: 2,
+                solution: "For a point charge \\(q\\) inside the cavity of a metallic shell:<br>1. Induced charge of \\(-q\\) is distributed on the inner surface, and \\(+q\\) on the outer surface.<br>2. The electric field lines must start at \\(q\\) and end perpendicularly on the inner surface.<br>3. Inside the metallic conductor, the electric field is zero (no lines of force).<br>4. On the outer surface, field lines start radially outwards. Diagram C correctly represents this behavior.",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p5_27.jpeg" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 14,
+                tag: "Electric Flux",
+                question: "Fig. shows a circular surface and a paraboloidal surface. It is placed in a uniform electric field of magnitude E such that the circular surface is oriented at right-angles to the direction of field. Electric flux through the paraboloidal surface is:",
+                options: [
+                    "zero",
+                    "\\(\\pi r l E\\)",
+                    "\\(\\frac{1}{2}\\pi r^2 E\\)",
+                    "\\(\\pi r^2 E\\)"
+                ],
+                correctIndex: 3,
+                solution: "Since there is no charge enclosed within the combined closed surface (circular base + paraboloidal curved surface), the net flux is zero:<br>\\(\\phi_{\\text{net}} = \\phi_{\\text{circular}} + \\phi_{\\text{paraboloidal}} = 0\\).<br>For the circular surface, the normal vector points in the opposite direction of the field, so \\(\\phi_{\\text{circular}} = -E \\cdot (\\pi r^2)\\).<br>Thus, \\(\\phi_{\\text{paraboloidal}} = E\\pi r^2\\).",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p6_30.jpeg" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 15,
+                tag: "Electric Flux",
+                question: "A cylinder of radius R and length l is placed in a uniform electric field E parallel to the axis of the cylinder. The total flux over the curved surface of the cylinder is:",
+                options: [
+                    "zero",
+                    "\\(\\pi R^2 E\\)",
+                    "\\(2\\pi R^2 E\\)",
+                    "\\(E/\\pi R^2\\)"
+                ],
+                correctIndex: 0,
+                solution: "At any point on the curved surface of the cylinder, the area vector (outward normal) is perpendicular to the cylinder's axis, and hence perpendicular to the electric field vector \\(\\vec{E}\\). Therefore, \\(\\vec{E} \\cdot d\\vec{A} = 0\\), and the flux through the curved surface is zero.",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p6_31.jpeg" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 16,
+                tag: "Electric Force",
+                question: "A system consists of a thin charged wire ring of radius r and a very long uniformly charged wire oriented along the axis of the ring, with one of its ends coinciding with the center of the ring. The total charge on the ring is q and the linear charge density on the straight wire is \\(\\lambda\\). The interaction force between the ring and the wire is:",
+                options: [
+                    "\\(\\frac{\\lambda q}{4\\pi\\epsilon_0 r}\\)",
+                    "\\(\\frac{\\lambda q}{2\\pi^2\\epsilon_0 r}\\)",
+                    "\\(\\frac{\\lambda q}{2\\pi\\epsilon_0 r}\\)",
+                    "\\(\\frac{4\\lambda q}{\\pi\\epsilon_0 r}\\)"
+                ],
+                correctIndex: 0,
+                solution: "By Newton's third law, the force exerted by the wire on the ring is equal in magnitude to the force exerted by the ring on the wire. The electric field of a charged ring at a distance \\(x\\) along its axis is:<br>\\(E = \\frac{q x}{4\\pi\\epsilon_0 (r^2 + x^2)^{3/2}}\\).<br>The force on an element \\(dx\\) of the wire is \\(dF = E \\cdot dq = E \\cdot (\\lambda dx)\\).<br>Total force is:<br>\\(F = \\int_0^\\infty \\frac{q \\lambda x}{4\\pi\\epsilon_0 (r^2 + x^2)^{3/2}} dx\\).<br>Let \\(u = r^2 + x^2 \\implies du = 2x dx\\). The limits change from \\(r^2\\) to \\(\\infty\\):<br>\\(F = \\frac{q \\lambda}{8\\pi\\epsilon_0} \\int_{r^2}^\\infty u^{-3/2} du = \\frac{q \\lambda}{8\\pi\\epsilon_0} \\left[ -2 u^{-1/2} \\right]_{r^2}^\\infty = \\frac{q \\lambda}{8\\pi\\epsilon_0} \\left( \\frac{2}{r} \\right) = \\frac{\\lambda q}{4\\pi\\epsilon_0 r}\\).",
+                svg: null
+            },
+            {
+                id: 17,
+                tag: "Gauss's Law",
+                question: "Consider an infinite line charge having uniform linear charge density and passing through the axis of a cylinder. What will be the effect on the flux passing through the curved surface if the portions of the line charge outside the cylinder is removed?",
+                options: [
+                    "decreases",
+                    "increases",
+                    "remains same",
+                    "cannot say"
+                ],
+                correctIndex: 0,
+                solution: "Removing the portion outside the cylinder reduces the electric field contribution at points on the curved surface of the cylinder, so the electric flux through the curved surface decreases.",
+                svg: null
+            },
+            {
+                id: 18,
+                tag: "Gauss's Law",
+                question: "Charge on an originally uncharged conductor is separated by holding a positively charged rod very closely nearby, as shown. Assume that the induced negative charge on the conductor is equal to the positive charge q on the rod. Then the flux through surface \\(S_1\\) is:",
+                options: [
+                    "zero",
+                    "\\(q/\\epsilon_0\\)",
+                    "-\\(q/\\epsilon_0\\)",
+                    "none of these"
+                ],
+                correctIndex: 1,
+                solution: "The surface \\(S_1\\) encloses only the positively charged rod (charge \\(+q\\)) and the induced negative charge (charge \\(-q\\)) on the conductor. Wait! Since the net charge enclosed by \\(S_1\\) is only \\(q\\), the net flux is \\(q/\\epsilon_0\\).",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p7_34.jpeg" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 19,
+                tag: "Gauss's Law",
+                question: "A cube of side 10 cm encloses a charge of 0.1 \\(\\mu\\)C at its center. Calculate the number of lines of force through each face of the cube.",
+                options: [
+                    "1.113 \\(\times 10^{11}\\)",
+                    "1.13 \\(\times 10^4\\)",
+                    "1.13 \\(\times 10^9\\)",
+                    "1883"
+                ],
+                correctIndex: 3,
+                solution: "Total flux through the cube is \\(\\phi = Q/\\epsilon_0 = \\frac{0.1 \\times 10^{-6}}{8.854 \\times 10^{-12}} = 1.13 \\times 10^4\\text{ N m}^2/\\text{C}\\).<br>The flux (number of lines of force) through each of the 6 faces is \\(\\frac{\\phi}{6} = \\frac{1.13 \\times 10^4}{6} \\approx 1883\\).",
+                svg: null
+            },
+            {
+                id: 20,
+                tag: "Gauss's Law",
+                question: "Consider two concentric spherical surfaces \\(S_1\\) with radius a and \\(S_2\\) with radius 2a, both centered at the origin. There is a charge +q at the origin and there are no other charges. Compare the flux \\(\\phi_1\\) through \\(S_1\\) with the flux \\(\\phi_2\\) through \\(S_2\\).",
+                options: [
+                    "\\(\\phi_1 = 4\\phi_2\\)",
+                    "\\(\\phi_1 = 2\\phi_2\\)",
+                    "\\(\\phi_1 = \\phi_2\\)",
+                    "\\(\\phi_1 = \\phi_2/2\\)"
+                ],
+                correctIndex: 2,
+                solution: "According to Gauss's law, the electric flux through a closed surface depends only on the net charge enclosed. Since both concentric spheres enclose the same charge \\(+q\\) at the origin and no other charges are present, the flux through both surfaces is identical: \\(\\phi_1 = \\phi_2 = q/\\epsilon_0\\).",
+                svg: null
+            },
+            {
+                id: 21,
+                tag: "Gauss's Law",
+                question: "A charge q is placed at the centre of the open end of a cylindrical vessel as shown in fig. The flux of the electric field through the surface of the vessel is:",
+                options: [
+                    "\\(q/\\epsilon_0\\)",
+                    "\\(q/2\\epsilon_0\\)",
+                    "\\(2q/\\epsilon_0\\)",
+                    "zero"
+                ],
+                correctIndex: 1,
+                solution: "To find the flux through the open cylindrical vessel, we can place another identical vessel symmetrically above it so that the two vessels together form a closed cylinder enclosing the charge \\(q\\). The total flux through this closed cylinder is \\(q/\\epsilon_0\\). By symmetry, the flux is shared equally between the two vessels, so the flux through the bottom vessel is \\(q/2\\epsilon_0\\).",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p7_35.jpeg" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 22,
+                tag: "Electric Flux",
+                question: "A square surface of side L meters is in the plane of the paper. A uniform electric field E (volt/m), also in the plane of the paper, is limited only to the lower half of the square surface (see figure). The electric flux in SI units associated with the surface is:",
+                options: [
+                    "\\(E L^2 / 2\\)",
+                    "Zero",
+                    "\\(E L^2\\)",
+                    "\\(E L^2 / 2\\epsilon_0\\)"
+                ],
+                correctIndex: 1,
+                solution: "The electric field vector \\(\\vec{E}\\) is in the plane of the paper. The area vector \\(\\vec{A}\\) of a flat surface in the plane of the paper points perpendicular to the paper (along the normal to the page). Therefore, \\(\\vec{E}\\) and \\(\\vec{A}\\) are perpendicular (angle is \\(90^\circ\\)), so the dot product \\(\\vec{E} \\cdot \\vec{A} = 0\\). The electric flux is zero.",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p8_38.png" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 23,
+                tag: "Gauss's Law",
+                question: "Four closed surfaces and corresponding charge distributions are shown below. Let the respective electric fluxes through the surfaces be \\(\Phi_1, \\Phi_2, \\Phi_3\\), and \\(\Phi_4\\). Then:",
+                options: [
+                    "\\(\Phi_1 > \\Phi_2 > \\Phi_3 > \\Phi_4\\)",
+                    "\\(\Phi_1 < \\Phi_2 = \\Phi_3 > \\Phi_4\\)",
+                    "\\(\Phi_1 > \\Phi_3; \\Phi_2 > \\Phi_4\\)",
+                    "\\(\Phi_1 = \\Phi_2 = \\Phi_3 = \\Phi_4\\)"
+                ],
+                correctIndex: 3,
+                solution: "The total flux through a closed surface depends only on the net charge enclosed within it. In all four cases, the net charge enclosed is the same (regardless of shape, size, or charge positions). Therefore, the electric flux is the same for all surfaces: \\(\Phi_1 = \\Phi_2 = \\Phi_3 = \\Phi_4\\).",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p8_39.jpeg" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 24,
+                tag: "Gauss's Law",
+                question: "Consider the charge configuration and a spherical gaussian surface as shown in the figure. When calculating the flux of the electric field over the spherical surface, the electric field will be due to:",
+                options: [
+                    "charges inside only",
+                    "only the positive charges",
+                    "all the charges",
+                    "positive and negative charges inside only"
+                ],
+                correctIndex: 2,
+                solution: "While the net electric flux through the Gaussian surface depends only on the charges enclosed inside, the electric field \\(\\vec{E}\\) at any point on the surface is the vector sum of the fields produced by all charges in space, both inside and outside the surface.",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p9_42.jpeg" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 25,
+                tag: "Electric Flux",
+                question: "In the figure, the net electric flux through the area A is \\(\phi = E \\cdot A\\) when the system is in air. On immersing the system in water the net electric flux through the area will:",
+                options: [
+                    "Become zero",
+                    "Remains same",
+                    "Increases",
+                    "Decreases"
+                ],
+                correctIndex: 3,
+                solution: "The permittivity of water is much higher than that of air (dielectric constant \\(K \\approx 80\\)). When the system is immersed in water, the effective electric field is reduced because of polarization in the medium. Since the electric field decreases, the net electric flux \\(\\phi = \\vec{E} \\cdot \\vec{A}\\) also decreases.",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p9_43.png" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 26,
+                tag: "Electric Potential",
+                question: "The electric potential in a certain region of space depends only on the x coordinate as \\(V = -\\alpha x^3 + \\beta\\), where \\(\\alpha\\) and \\(\\beta\\) are constants. The volume charge distribution of space charge is given as:",
+                options: [
+                    "\\(3\\alpha\\epsilon_0 x^2\\)",
+                    "\\(-3\\alpha\\epsilon_0 x^2\\)",
+                    "\\(6\\alpha\\epsilon_0 x^2\\)",
+                    "\\(6\\alpha\\epsilon_0 x\\)"
+                ],
+                correctIndex: 3,
+                solution: "The electric field is \\(E_x = -\\frac{\\partial V}{\\partial x} = -\\frac{d}{dx}(-\\alpha x^3 + \\beta) = 3\\alpha x^2\\).<br>Using Gauss's law in differential form (Poisson's equation):<br>\\(\\frac{\\partial E_x}{\\partial x} = \\frac{\\rho}{\\epsilon_0} \\implies \\frac{d}{dx}(3\\alpha x^2) = \\frac{\\rho}{\\epsilon_0}\\)<br>\\(6\\alpha x = \\frac{\\rho}{\\epsilon_0} \\implies \\rho(x) = 6\\alpha\\epsilon_0 x\\).",
+                svg: null
+            },
+            {
+                id: 27,
+                tag: "Electric Field",
+                question: "A negative charge is placed at the centre of the non-conducting sphere. The direction of the electric field on any point at the surface of the sphere is:",
+                options: [
+                    "Radially inward",
+                    "Radially outward",
+                    "Along the tangent to the surface",
+                    "No electric field produced"
+                ],
+                correctIndex: 0,
+                solution: "Electric field lines always originate from positive charges (or infinity) and terminate on negative charges. A negative charge placed at the centre will pull electric field lines radially inward from the surrounding space, so the electric field at any point on the surface is directed radially inward.",
+                svg: null
+            },
+            {
+                id: 28,
+                tag: "Gauss's Law",
+                question: "If a hemispherical body is placed in a uniform electric field E, then the flux linked with the curved surface is:",
+                options: [
+                    "\\(2\\pi R^2 E\\)",
+                    "\\(\\pi R^2 E\\)",
+                    "\\(4\\pi R^2 E\\)",
+                    "\\(6\\pi R^2 E\\)"
+                ],
+                correctIndex: 1,
+                solution: "Since the net flux through the closed hemispherical surface is zero, the flux entering through the flat surface must equal the flux leaving through the curved surface. The flux through the flat circular surface of radius \\(R\\) is \\(E \\cdot \\pi R^2\\). Therefore, the magnitude of the flux linked with the curved surface is also \\(\\pi R^2 E\\).",
+                svg: null
+            },
+            {
+                id: 29,
+                tag: "Gauss's Law",
+                question: "Flux passing through the shaded surface of a sphere is \\(q / Z\\epsilon_0\\) when a point charge q is placed at the center (radius of the sphere is R). Find the value of Z.",
+                options: [
+                    "2",
+                    "4",
+                    "6",
+                    "8"
+                ],
+                correctIndex: 1,
+                solution: "From the solutions, the flux passing through the shaded surface subtending a specific solid angle corresponds to \\(\phi = \\frac{q}{4\\epsilon_0}\\). Therefore, the value of Z is 4.",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p10_46.png" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            },
+            {
+                id: 30,
+                tag: "Gauss's Law",
+                question: "One-fourth of a sphere of radius 1m is removed as shown in the figure. An electric field parallel to the xy plane exists. Find the flux through the remaining curved part (in \\(Nm^2/C\\)):",
+                options: [
+                    "\\(pi R^2 E\\)",
+                    "\\(\frac{\pi R^2 E}{\sqrt{2}}\\)",
+                    "\\(\sqrt{2}\pi R^2 E\\)",
+                    "zero"
+                ],
+                correctIndex: 1,
+                solution: "The electric field \\(E\\) is parallel to the xy plane at \\(45^\circ\\) to the axes. The remaining curved part forms a three-quarter sphere. Using projection of areas: the flux through the curved surface is equal in magnitude to the flux through the flat faces. The projected area along the electric field gives a flux magnitude of \\(\frac{\pi R^2 E}{\sqrt{2}}\\).",
+                svg: `<img src="../Electrostats/gauss_images/extracted_p10_47.png" style="max-height: 220px; width: auto; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin: 0.5rem auto; display: block;">`
+            }
+        ];
+
+        let currentIndex = 0;
+        let showOptionsFlag = false;
+        let showAnswerFlag = false;
+        let showSolutionFlag = false;
+        let drawMode = false;
+
+        // Exam Mode stats
+        let totalScore = 0;
+        let correctAnswersCount = 0;
+        let totalTimeTaken = 0;
+        let questionAnswered = false;
+
+        // Timers
+        let qTimerInterval = null;
+        let qSeconds = 0;
+        let qTimerRunning = false;
+        let calculatedPoints = 10;
+
+        // Canvas Sketching Setup
+        const canvas = document.getElementById('blackboard');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            ctx.lineCap = 'round';
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#ef4444'; // Red sketching pen
+        }
+
+        function selectQuiz(quizId) {
+            if (quizId === 'electrostats') {
+                document.getElementById('landing-screen').style.display = 'none';
+                document.querySelector('.workspace').classList.add('active');
+                loadQuestion();
+                resizeCanvas();
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('DOMContentLoaded', () => {
+            selectQuiz('electrostats');
+        });
+
+        // Drawing Logic
+        canvas.addEventListener('mousedown', (e) => {
+            if (!drawMode) return;
+            drawing = true;
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!drawing || !drawMode) return;
+            ctx.lineTo(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener('mouseup', () => drawing = false);
+        canvas.addEventListener('mouseleave', () => drawing = false);
+
+        // Touch support for smartboards
+        canvas.addEventListener('touchstart', (e) => {
+            if (!drawMode) return;
+            drawing = true;
+            const t = e.touches[0];
+            ctx.beginPath();
+            ctx.moveTo(t.clientX - canvas.getBoundingClientRect().left, t.clientY - canvas.getBoundingClientRect().top);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (!drawing || !drawMode) return;
+            const t = e.touches[0];
+            ctx.lineTo(t.clientX - canvas.getBoundingClientRect().left, t.clientY - canvas.getBoundingClientRect().top);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener('touchend', () => drawing = false);
+
+        function toggleDrawMode() {
+            drawMode = !drawMode;
+            document.getElementById('btn-draw').classList.toggle('active', drawMode);
+            canvas.classList.toggle('active', drawMode);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function getPointsForTime(sec) {
+            if (sec >= 300) return 0;
+            if (sec <= 15) return 10;
+            if (sec <= 30) return 9;
+            if (sec <= 50) return 8;
+            if (sec <= 75) return 7;
+            if (sec <= 100) return 6;
+            if (sec <= 150) return 5;
+            if (sec <= 200) return 4;
+            return 3;
+        }
+
+        function recalculateTotalScore() {
+            totalScore = quizData.reduce((sum, q) => sum + (q.awardedPoints || 0), 0);
+            correctAnswersCount = quizData.filter(q => q.answered && q.selectedOptionIndex === q.correctIndex).length;
+            document.getElementById('score-total').innerText = totalScore;
+        }
+
+        function startQuestionTimer() {
+            const q = quizData[currentIndex];
+            if (q.answered) return;
+
+            document.getElementById('start-overlay-el').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('start-overlay-el').style.display = 'none';
+            }, 300);
+            document.getElementById('question-content-el').classList.remove('locked-blur');
+
+            showOptionsFlag = true;
+            applyDisplayStates();
+            
+            setTimeout(() => {
+                const rb = document.querySelector('.right-board');
+                if (rb) rb.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 100);
+
+            qSeconds = 0;
+            qTimerRunning = true;
+            calculatedPoints = 10;
+            
+            document.getElementById('timer-el').innerText = `Question Timer: 0s (Worth 10 pts)`;
+            qTimerInterval = setInterval(() => {
+                qSeconds++;
+                totalTimeTaken++;
+                
+                calculatedPoints = getPointsForTime(qSeconds);
+                
+                document.getElementById('timer-el').innerText = `Question Timer: ${qSeconds}s (Worth ${calculatedPoints} pts)`;
+                
+                if (qSeconds >= 300) {
+                    clearInterval(qTimerInterval);
+                    qTimerRunning = false;
+                    calculatedPoints = 0;
+                    
+                    q.answered = true;
+                    q.selectedOptionIndex = null;
+                    q.awardedPoints = 0;
+                    q.timeTaken = 300;
+                    
+                    showAnswerFlag = true;
+                    showSolutionFlag = true;
+                    applyDisplayStates();
+                    
+                    document.querySelectorAll('.opt-card').forEach(el => el.style.pointerEvents = 'none');
+                    
+                    document.getElementById('award-banner-el').innerText = `Time's Up! 0 Points.`;
+                    document.getElementById('award-panel-el').style.display = 'flex';
+                    
+                    recalculateTotalScore();
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            clearCanvas();
+            clearInterval(qTimerInterval);
+            qTimerRunning = false;
+            qSeconds = 0;
+            calculatedPoints = 10;
+            
+            quizData.forEach(item => {
+                if (item.answered === undefined) {
+                    item.answered = false;
+                    item.selectedOptionIndex = null;
+                    item.awardedPoints = 0;
+                    item.timeTaken = 0;
+                }
+            });
+
+            const q = quizData[currentIndex];
+            
+            recalculateTotalScore();
+            document.getElementById('award-panel-el').style.display = 'none';
+
+            const lb = document.querySelector('.left-board');
+            if (lb) lb.scrollTop = 0;
+            const rb = document.querySelector('.right-board');
+            if (rb) rb.scrollTop = 0;
+
+            document.getElementById('question-index-lbl').innerHTML = `
+                Question ${currentIndex + 1} of ${quizData.length} &bull; 
+                <span id="timer-el" style="color:var(--accent-primary); font-weight:700; margin-right:1rem;">Question Timer: 0s (Worth 10 pts)</span>
+            `;
+            document.getElementById('q-tag-el').innerText = q.tag;
+            document.getElementById('q-title-el').innerHTML = q.question;
+
+            const svgWrap = document.getElementById('q-svg-wrap');
+            if (q.svg) {
+                svgWrap.innerHTML = q.svg;
+                svgWrap.style.display = 'flex';
+            } else {
+                svgWrap.style.display = 'none';
+            }
+
+            const optionsList = document.getElementById('options-list-el');
+            optionsList.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const card = document.createElement('div');
+                card.className = 'opt-card';
+                card.id = `opt-${idx}`;
+                
+                let optHtml = `<span>${opt}</span>`;
+                if (opt.endsWith('.png') || opt.endsWith('.jpg')) {
+                    let optSrc = opt;
+                    if (window.location.pathname.includes('Quiz World Site')) {
+                        optSrc = `../Optics /${opt}`;
+                    }
+                    optHtml = `<img src="${optSrc}" alt="Option ${String.fromCharCode(65 + idx)}" style="max-height: 80px; max-width: 100%; border-radius: 8px; filter: invert(1) hue-rotate(180deg); margin-left: 0.5rem; opacity: 0.9;">`;
+                }
+
+                card.innerHTML = `
+                    <span class="opt-letter">${String.fromCharCode(65 + idx)}</span>
+                    ${optHtml}
+                `;
+                card.onclick = () => {
+                    if (q.answered) return;
+                    q.answered = true;
+                    q.selectedOptionIndex = idx;
+                    q.timeTaken = qSeconds;
+                    
+                    clearInterval(qTimerInterval);
+                    qTimerRunning = false;
+                    
+                    document.querySelectorAll('.opt-card').forEach(el => el.style.pointerEvents = 'none');
+                    
+                    if (idx === q.correctIndex) {
+                        q.awardedPoints = calculatedPoints;
+                        card.classList.add('correct');
+                        document.getElementById('award-banner-el').innerText = `Correct! +${calculatedPoints} Points.`;
+                    } else {
+                        q.awardedPoints = 0;
+                        card.classList.add('incorrect');
+                        const correctCard = document.getElementById(`opt-${q.correctIndex}`);
+                        if (correctCard) correctCard.classList.add('correct');
+                        document.getElementById('award-banner-el').innerText = `Incorrect! 0 Points.`;
+                    }
+                    
+                    recalculateTotalScore();
+                    
+                    showAnswerFlag = true;
+                    showSolutionFlag = true;
+                    applyDisplayStates();
+                    
+                    document.getElementById('award-panel-el').style.display = 'flex';
+                    
+                    setTimeout(() => {
+                        const rb = document.querySelector('.right-board');
+                        if (rb) rb.scrollTo({ top: rb.scrollHeight, behavior: 'smooth' });
+                    }, 100);
+                };
+                optionsList.appendChild(card);
+            });
+
+            document.getElementById('solution-text-el').innerHTML = q.solution;
+
+            if (q.answered) {
+                document.getElementById('start-overlay-el').style.display = 'none';
+                document.getElementById('question-content-el').classList.remove('locked-blur');
+                showOptionsFlag = true;
+                showAnswerFlag = true;
+                showSolutionFlag = true;
+                applyDisplayStates();
+                
+                document.querySelectorAll('.opt-card').forEach(el => el.style.pointerEvents = 'none');
+                
+                if (q.selectedOptionIndex !== null) {
+                    const selectedCard = document.getElementById(`opt-${q.selectedOptionIndex}`);
+                    if (selectedCard) {
+                        if (q.selectedOptionIndex === q.correctIndex) {
+                            selectedCard.classList.add('correct');
+                        } else {
+                            selectedCard.classList.add('incorrect');
+                        }
+                    }
+                }
+                const correctCard = document.getElementById(`opt-${q.correctIndex}`);
+                if (correctCard) correctCard.classList.add('correct');
+                
+                if (q.selectedOptionIndex === null) {
+                    document.getElementById('award-banner-el').innerText = `Time's Up! 0 Points.`;
+                } else if (q.selectedOptionIndex === q.correctIndex) {
+                    document.getElementById('award-banner-el').innerText = `Correct! +${q.awardedPoints} Points.`;
+                } else {
+                    document.getElementById('award-banner-el').innerText = `Incorrect! 0 Points.`;
+                }
+                document.getElementById('award-panel-el').style.display = 'flex';
+                document.getElementById('timer-el').innerText = `Answered in ${q.timeTaken}s (Worth ${q.awardedPoints} pts)`;
+            } else {
+                document.getElementById('start-overlay-el').style.display = 'flex';
+                document.getElementById('start-overlay-el').style.opacity = '1';
+                document.getElementById('question-content-el').classList.add('locked-blur');
+                resetFlags();
+                applyDisplayStates();
+            }
+            
+            if (window.renderMathInElement) {
+                renderMathInElement(document.querySelector('.board-container'));
+            }
+            
+            if (currentIndex === quizData.length - 1) {
+                document.getElementById('next-btn').innerHTML = `Finish &check;`;
+            } else {
+                document.getElementById('next-btn').innerHTML = `Next &rarr;`;
+            }
+        }
+
+        function applyDisplayStates() {
+            document.getElementById('options-list-el').style.display = showOptionsFlag ? 'flex' : 'none';
+            document.getElementById('solution-panel-el').style.display = showSolutionFlag ? 'block' : 'none';
+
+            const q = quizData[currentIndex];
+            if (showAnswerFlag) {
+                const optEl = document.getElementById(`opt-${q.correctIndex}`);
+                if (optEl) optEl.classList.add('correct');
+            } else {
+                document.querySelectorAll('.opt-card').forEach(el => el.classList.remove('correct'));
+            }
+        }
+
+        // Navigation
+        function nextQuestion() {
+            if (currentIndex < quizData.length - 1) {
+                currentIndex++;
+                resetFlags();
+                loadQuestion();
+            } else {
+                showSummaryScreen();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                resetFlags();
+                loadQuestion();
+            }
+        }
+
+        function resetFlags() {
+            showOptionsFlag = false;
+            showAnswerFlag = false;
+            showSolutionFlag = false;
+        }
+
+        function showSummaryScreen() {
+            clearInterval(qTimerInterval);
+            qTimerRunning = false;
+            
+            let accuracy = Math.round((correctAnswersCount / quizData.length) * 100);
+            
+            document.getElementById('summary-score').innerText = `${totalScore} pts`;
+            document.getElementById('summary-stats').innerText = `Accuracy: ${accuracy}% | Total Time: ${totalTimeTaken}s`;
+            
+            let message = "";
+            if (accuracy >= 80) {
+                message = "Outstanding! You have mastered this chapter. Perfect score potential! 🌟";
+            } else if (accuracy >= 50) {
+                message = "Good job! You've successfully completed the exam. Keep practicing to improve! 👍";
+            } else {
+                message = "Keep studying! Try reviewing the solutions and retaking the exam to boost your score. 💪";
+            }
+            document.getElementById('summary-message').innerText = message;
+            document.getElementById('summary-modal').style.display = 'flex';
+        }
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                nextQuestion();
+            } else if (e.key === 'ArrowLeft') {
+                prevQuestion();
+            } else if (e.key.toLowerCase() === 'd') {
+                toggleDrawMode();
+            }
+        });
+        
+    </script>
+
+    </body>
+</html>
