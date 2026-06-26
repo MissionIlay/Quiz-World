@@ -277,7 +277,7 @@
                     <option value="refraction_exam.html">Refraction</option>
                 </select>
                 
-                <a href="#" onclick="location.href=document.getElementById('exam-dropdown').value; return false;" style="width: 100%; text-align: center; text-decoration: none; display: block; padding: 1rem; border-radius: 12px; font-size: 1.15rem; font-weight: 700; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: 2px solid rgba(255,255,255,0.15); box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s ease;">Start Exam &rarr;</a>
+                <a href="#" onclick="window.startSelectedExam(); return false;" style="width: 100%; text-align: center; text-decoration: none; display: block; padding: 1rem; border-radius: 12px; font-size: 1.15rem; font-weight: 700; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: 2px solid rgba(255,255,255,0.15); box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s ease;">Start Exam &rarr;</a>
             </div>
             
         </div>
@@ -346,5 +346,6 @@
             }
         }
     </script>
+    <script src="leaderboard.js"></script>
 </body>
 </html>
